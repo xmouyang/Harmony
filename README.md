@@ -29,11 +29,10 @@ Nvidia Xavier NX
 
 First Stage: Modality-Wise FL
 * Harmony on client: 
-	* For all nodes: local unimodal training;
-	* For multimodal nodes: resource allocation on different unimodal tasks;
+	* For all nodes: local unimodal training; For multimodal nodes: resource allocation on different unimodal tasks;
 	* For all nodes: send model weights to the server.
 * Harmony on server: 
-	* Run multiple threads for different unimodal FL subsystems to recieve model weights from clients;
+	* Use different ports for different unimodal FL subsystems to recieve model weights from clients;
 	* Aggregate model weights of different modalities with Fedavg;
 	* Send the aggregated model weights and the round completion time to each client.
 	
@@ -103,9 +102,11 @@ Second Stage: Federated Fusion Learning (among multimodal nodes)
 		    ./run_fedfusion_xx.sh
 		    ```
 * Run the following code on the server machine
-	* Run the first stage
+	* Run the first stage: run multiple tasks for different unimodal FL subsystems
 	    ```bash
-	    python3 main_server_stage1_uniFL.py
+	    python3 main_server_stage1_uniFL.py --modality_group 0
+	    python3 main_server_stage1_uniFL.py --modality_group 1
+	    python3 main_server_stage1_uniFL.py --modality_group 2
 	    ```
 	* Run the second stage
 	    ```bash
