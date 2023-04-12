@@ -50,16 +50,21 @@ Second Stage: Federated Fusion Learning (among multimodal nodes)
 ```
 |--harmony-AD-accuracy // codes running on cloud clusters with multiple GPUs, for evaluating the accuracy on the self-collected AD dataset
 
-|-- client                    // code in client side
-    |-- client_cfmtl.py/	// main file of client 
-    |-- communication.py/	// set up communication with server
-    |-- data_pre.py/		// prepare for the FL data
-    |-- model_alex_full.py/ 	// model on client 
-    |-- desk_run_test.sh/	// run client 
+	|-- client                    // codes in the client side
+	    |-- run_unifl_all.sh/	// run the first stage of all clients on a cloud cluster 
+	    |-- run_fedfusion_all.sh/	// run the second stage of all clients on a cloud cluster 
+	    |-- main_unimodal.py/	// main file of running first stage on the client
+	    |-- main_fusion.py or main_fusion_3modal.py or main_fusion_2modal.py/	// main file of running second stage on the client
+	    |-- communication.py/	// set up communication with server
+	    |-- data_pre.py/		// load the data for clients in FL
+	    |-- model.py/ 	// model configuration for different datasets 
+	    |-- sample_index.zip/ 	// index of training and testing data, need to be uncompressed
+	    |-- util.py		// utility functions
 
-|-- server/    // code in server side
-    |-- server_cfmtl.py/        // main file of client
-    |-- server_model_alex_full.py/ // model on server 
+
+	|-- server/    // codes in the server side
+	    |-- main_server_stage1_uniFL.py/        // main file of the first stage of the server
+	    |-- main_server_stage2_fedfusion_3modal.py/ // main file of the second stage of the server
 
 |--harmony-AD-edge-schedule // codes running on edge devices (Nvidia Xavier NX), for evaluating the resource allocation scheme on the self-collected AD dataset
 
