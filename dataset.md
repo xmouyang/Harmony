@@ -1,6 +1,6 @@
 # Heterogeneous-Multi-Modal-FL-Datasets
 
-This repo includes four real-world multi-modal datasets collected under federated learning settings, which are used in the MobiSys 2023 paper: "Harmony: Heterogeneous Multi-Modal Federated Learning through Disentangled Model Training",
+This repo includes four real-world multi-modal datasets collected under federated learning settings, which are used in the MobiSys 2023 paper: "Harmony: Heterogeneous Multi-Modal Federated Learning through Disentangled Model Training".
 
 The first dataset is a multi-modal dataset for Alzheimer's Disease monitoring collected by ourselves and first appeared in the paper. The other three are public datasets pre-processed by us to federated learning settings.
 
