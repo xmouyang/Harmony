@@ -1,25 +1,25 @@
 # Heterogeneous-Multi-Modal-FL-Datasets
 
-This repo includes four new real-world human activity recognition (HAR) datasets collected under federated learning settings, which first appear at the MobiSys 2021 paper: <a href="https://dl.acm.org/doi/10.1145/3458864.3467681"> ClusterFL: A Similarity-Aware Federated Learning System for Human Activity Recognition </a> and TOSN 2022 paper: "<a href="https://dl.acm.org/doi/10.1145/3554980"> ClusterFL: A Clustering-based Federated Learning System for Human Activity Recognition </a>".
+This repo includes four real-world multi-modal datasets collected under federated learning settings used in the MobiSys 2023 paper: "Harmony: Heterogeneous Multi-Modal Federated Learning through Disentangled Model Training", including three public datasets and one new dataset collected by ourselves for AD monitoring.
 
-The first dataset is a large-scale dataset collected using an Android App in a crowdsourcing manner. The other three are collected in indoor environments.
+The first dataset is a multi-modal dataset for Alzheimer's Disease monitoring collected by ourselves and first appeared in the paper. The other three are public datasets pre-processed by us to federated learning settings.
 
 
 # Download
 
-  The four datasets are publicly available in the current repository. Each dataset is accompanied by a Python file "data_pre.py" for preprocessing and loading each node's data separately in federated learning. The data and processing file are compressed to a ".zip" file for each dataset. Please click the following links for more detail descriptions and downloading each dataset.
+  The four pre-processed datasets can be downloaded in the [onedrive folder](https://mycuhk-my.sharepoint.com/personal/1155136315_link_cuhk_edu_hk/_layouts/15/onedrive.aspx?id=%2Fpersonal%2F1155136315%5Flink%5Fcuhk%5Fedu%5Fhk%2FDocuments%2FResearch%2FHarmony%2DDataset&ga=1). Please refer to the following discriptions of collecting and pre-processing for each dataset. 
   
   
-### [HARBox Dataset: Daily Activities Recognition using Smartphones](https://github.com/xmouyang/FL-Datasets-for-HAR/tree/main/datasets/HARBox)
+### HARBox Dataset: Daily Activities Recognition using Smartphones
 
 
-### [UWB Dataset: Human Movement Detection using Ultra Wide Band Modules](https://github.com/xmouyang/FL-Datasets-for-HAR/tree/main/datasets/UWB)
+### FLASH Dataset: Human Movement Detection using Ultra Wide Band Modules
 
 
-### [IMU Dataset: Walking Activity Recognition using Inertial Measurement Unit Modules](https://github.com/xmouyang/FL-Datasets-for-HAR/tree/main/datasets/IMU)
+### MHAD Dataset: Walking Activity Recognition using Inertial Measurement Unit Modules
 
 
-### [Depth Dataset: Gesture Recognition using Depth Camera](https://github.com/xmouyang/FL-Datasets-for-HAR/tree/main/datasets/Depth)
+### USD Dataset: Gesture Recognition using Depth Camera
 
 
 
