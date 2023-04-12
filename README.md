@@ -79,7 +79,7 @@ Second Stage: Federated Fusion Learning (among multimodal nodes)
 
 # Quick Start 
 * Download the codes for each dataset in this repo. Put the folder `client` on your client machine and `server` on your server machine.
-* Download the `dataset` (three publich datasets and one data collected by ourselves for AD monitoring) from [Harmony-Datasets](https://github.com/xmouyang/Harmony/blob/main/dataset.md) to your client machine.
+* Download the `dataset` (three public datasets and one dataset collected by ourselves for AD monitoring) from [Harmony-Datasets](https://github.com/xmouyang/Harmony/blob/main/dataset.md) to your client machine.
 * Choose one dataset from the above four datasets and put the folder `under the same folder` with corresponding codes. You can also change the path of loading datasets in 'data_pre.py' to the data path on your client machine.
 * Change the argument "server_address" in 'main_unimodal.py' and 'main_fedfuse.py' as your true server address. If your server is located in the same physical machine of your nodes, you can choose "localhost" for this argument.
 * Run the following code on the client machine
