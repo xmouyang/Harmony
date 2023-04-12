@@ -93,7 +93,7 @@ Second Stage: Federated Fusion Learning (among multimodal nodes)
 		    ./run_fedfusion_all.sh
 		    ```
 	* For running clients on the edge devices (clients are assigned to different Nvidia Xavier NX device)
-		* Move the bash file of each node (run_unifl_xx.sh, run_unifl_schedule_xx.sh and run_fedfusion_xx.sh) from the folder 'node-run-stage1' and 'node-run-stage2' to the folder 'client'
+		* Move the running script of each node (run_unifl_xx.sh, run_unifl_schedule_xx.sh and run_fedfusion_xx.sh) from the folder 'node-run-stage1' and 'node-run-stage2' to the folder 'client'
 		* Run the first stage: 
 			* For single-modal nodes: 
 			    ```bash
