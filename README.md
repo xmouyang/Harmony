@@ -79,7 +79,7 @@ Second Stage: Federated Fusion Learning (among multimodal nodes)
 * Choose one dataset from the above four datasets and put the folder `under the same folder` with corresponding codes. You can also change the path of loading datasets in 'data_pre.py' to the data path on your client machine.
 * Change the argument "server_address" in 'main_unimodal.py' and 'main_fedfuse.py' as your true server address. If your server is located in the same physical machine of your nodes, you can choose "localhost" for this argument.
 * Run the following code on the client machine
-	* For running clients on cloud clusters (clients are assigned to different GPUs)
+	* For running clients on the cloud cluster (clients are assigned to different GPUs)
 		* Run the first stage
 		    ```bash
 		    ./run_unifl_all.sh
@@ -87,6 +87,20 @@ Second Stage: Federated Fusion Learning (among multimodal nodes)
 		* Run the second stage
 		    ```bash
 		    ./run_fedfusion_all.sh
+		    ```
+	* For running clients on the edge devices (clients are assigned to different Nvidia Xavier NX device)
+		* Run the first stage: move the bash file of node xx (run_unifl_xx.sh or run_unifl_schedule_xx.sh) from the folder 'node-run-stage1' to the folder 'client'
+			* For single-modal nodes: 
+			    ```bash
+			    ./run_unifl_xx.sh
+			    ```
+			* For multi-modal nodes: 
+			    ```bash
+			    ./run_unifl_schedule_xx.sh
+			    ```
+		* Run the second stage: move the bash file of node xx (run_fedfusion_xx.sh) from the folder 'node-run-stage2' to the folder 'client'
+		    ```bash
+		    ./run_fedfusion_xx.sh
 		    ```
 * Run the following code on the server machine
 	* Run the first stage
