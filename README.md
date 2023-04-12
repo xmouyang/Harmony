@@ -24,10 +24,10 @@ Nvidia Xavier NX
 
 # Harmony Overview
 <p align="center" >
-	<img src="https://github.com/xmouyang/Harmony/blob/main/figure/harmony-system-overview.png" width="500">
+	<img src="https://github.com/xmouyang/Harmony/blob/main/figure/harmony-system-overview.png" width="800">
 </p>
 
-First Stage: modality-wise FL
+First Stage: Modality-Wise FL
 * Harmony on client: 
 	* For all nodes: local unimodal training;
 	* For multimodal nodes: resource allocation on different unimodal tasks;
@@ -35,11 +35,10 @@ First Stage: modality-wise FL
 * Harmony on server: 
 	* Run multiple threads for different unimodal FL subsystems to recieve model weights from clients;
 	* Aggregate model weights of different modalities with Fedavg;
-	* Send the aggregated model weights, and the round completion time (for calculating resource ratio) to each client.
+	* Send the aggregated model weights and the round completion time to each client.
 	
-Second Stage: federated fusion learning among multimodal nodes
+Second Stage: Federated Fusion Learning (among multimodal nodes)
 * Harmony on client: 
-	* Load the model weights of unimodal encoders trained in the first stage;
 	* Local fusion: train the classifier layers and finetune the unimodal encoders;
 	* Measure the modality bias of unimodal encoders;
 	* Send model weights and modality bias to the server.
@@ -50,6 +49,8 @@ Second Stage: federated fusion learning among multimodal nodes
 
 # Project Strcuture
 ```
+|--harmony-AD-accuracy // codes running on cloud clusters with multiple GPUs, for evaluating the accuracy on the self-collected AD dataset
+
 |-- client                    // code in client side
     |-- client_cfmtl.py/	// main file of client 
     |-- communication.py/	// set up communication with server
@@ -61,26 +62,41 @@ Second Stage: federated fusion learning among multimodal nodes
     |-- server_cfmtl.py/        // main file of client
     |-- server_model_alex_full.py/ // model on server 
 
-|-- README.md
+|--harmony-AD-edge-schedule // codes running on edge devices (Nvidia Xavier NX), for evaluating the resource allocation scheme on the self-collected AD dataset
 
-|-- pictures               // figures used this README.md
+|--harmony-Flash // codes running on cloud clusters with multiple GPUs, for evaluating the accuracy on the FLASH dataset
+
+|--harmony-MHAD // codes running on cloud clusters with multiple GPUs, for evaluating the accuracy on the MHAD dataset
+
+|--harmony-USC // codes running on cloud clusters with multiple GPUs, for evaluating the accuracy on the USC dataset
+
 ```
 <br>
 
-# Quick Start
+# Quick Start 
+* Download the codes for each dataset in this repo. Put the folder `client` on your client machine and `server` on your server machine.
 * Download the `dataset` (three publich datasets and one data collected by ourselves for AD monitoring) from [Harmony-Datasets](https://mycuhk-my.sharepoint.com/:f:/g/personal/1155136315_link_cuhk_edu_hk/EvkjzyZRYBBIuaBD-tR8-7QBzaJ1xIfa1eQGUIveGTwPPw?e=cFo7cC) to your client machine.
-* Chooose one dataset from the above four datasets and change the "read-path" in 'data_pre.py' to the path on your client machine.
-* Change the "server_addr" and "server_port" in 'client_cfmtl.py' as your true server address. 
+* Choose one dataset from the above four datasets and put the folder `under the same folder` with corresponding codes. You can also change the path of loading datasets in 'data_pre.py' to the data path on your client machine.
+* Change the argument "server_address" in 'main_unimodal.py' and 'main_fedfuse.py' as your true server address. If your server is located in the same physical machine of your nodes, you can choose "localhost" for this argument.
 * Run the following code on the client machine
-    ```bash
-    cd client
-    ./desk_run_test.sh
-    ```
+	* For running clients on cloud clusters (clients are assigned to different GPUs)
+		* Run the first stage
+		    ```bash
+		    ./run_unifl_all.sh
+		    ```
+		* Run the second stage
+		    ```bash
+		    ./run_fedfusion_all.sh
+		    ```
 * Run the following code on the server machine
-    ```bash
-    cd server
-    python3 server_cfmtl.py
-    ```
+	* Run the first stage
+	    ```bash
+	    python3 main_server_stage1_uniFL.py
+	    ```
+	* Run the second stage
+	    ```bash
+	    python3 main_server_stage2_fedfusion_3modal.py
+	    ```
     ---
 
 # Citation
