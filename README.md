@@ -5,7 +5,7 @@ This is the repo for MobiSys 2023 paper: "Harmony: Heterogeneous Multi-Modal Fed
 # Requirements
 The program has been tested in the following environment:
 
-Cloud Cluster
+Computing Clusters
 * Python 3.9.7
 * Pytorch 1.12.0
 * torchvision 0.13.0
@@ -78,8 +78,8 @@ Second Stage: Federated Fusion Learning (among multimodal nodes)
 <br>
 
 # Quick Start 
-* Download the codes for each dataset in this repo. Put the folder `client` on your client machine and `server` on your server machine.
-* Download the `dataset` (three public datasets and one dataset collected by ourselves for AD monitoring) from [Harmony-Datasets](https://github.com/xmouyang/Harmony/blob/main/dataset.md) to your client machine.
+* Download the codes for each dataset in this repo. Put the folder `client` on your client machines and `server` on your server machine.
+* Download the `dataset` (three public datasets and one dataset collected by ourselves for AD monitoring) from [Harmony-Datasets](https://github.com/xmouyang/Harmony/blob/main/dataset.md) to your client machines.
 * Choose one dataset from the above four datasets and put the folder `under the same folder` with corresponding codes. You can also change the path of loading datasets in 'data_pre.py' to the data path on your client machine.
 * Change the argument "server_address" in 'main_unimodal.py' and 'main_fedfuse.py' as your true server address. If your server is located in the same physical machine of your nodes, you can choose "localhost" for this argument.
 * Run the following code on the client machine
@@ -93,7 +93,8 @@ Second Stage: Federated Fusion Learning (among multimodal nodes)
 		    ./run_fedfusion_all.sh
 		    ```
 	* For running clients on the edge devices (clients are assigned to different Nvidia Xavier NX device)
-		* Run the first stage: move the bash file of node xx (run_unifl_xx.sh or run_unifl_schedule_xx.sh) from the folder 'node-run-stage1' to the folder 'client'
+		* Move the bash file of each node (run_unifl_xx.sh, run_unifl_schedule_xx.sh and run_fedfusion_xx.sh) from the folder 'node-run-stage1' and 'node-run-stage2' to the folder 'client'
+		* Run the first stage: 
 			* For single-modal nodes: 
 			    ```bash
 			    ./run_unifl_xx.sh
@@ -102,7 +103,7 @@ Second Stage: Federated Fusion Learning (among multimodal nodes)
 			    ```bash
 			    ./run_unifl_schedule_xx.sh
 			    ```
-		* Run the second stage: move the bash file of node xx (run_fedfusion_xx.sh) from the folder 'node-run-stage2' to the folder 'client'
+		* Run the second stage: 
 		    ```bash
 		    ./run_fedfusion_xx.sh
 		    ```
