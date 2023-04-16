@@ -1,4 +1,4 @@
-# Heterogeneous-Multi-Modal-FL-Datasets
+# Heterogeneous-MultiModal-FL-Datasets
 
 This repo includes four real-world multi-modal datasets collected under federated learning settings, which are used in the MobiSys 2023 paper: "Harmony: Heterogeneous Multi-Modal Federated Learning through Disentangled Model Training".
 
@@ -10,7 +10,7 @@ The first dataset is a multi-modal dataset for Alzheimer's Disease monitoring co
   The four pre-processed datasets can be downloaded in the [onedrive folder](https://mycuhk-my.sharepoint.com/personal/1155136315_link_cuhk_edu_hk/_layouts/15/onedrive.aspx?id=%2Fpersonal%2F1155136315%5Flink%5Fcuhk%5Fedu%5Fhk%2FDocuments%2FResearch%2FHarmony%2DDataset&ga=1). Please refer to the following discriptions of collecting and pre-processing for each dataset. 
   
   
-### HARBox Dataset: Daily Activities Recognition using Smartphones
+### Alzheimer’s Disease Monitoring Dataset: Detecting Behavior Biomarkers with a Depth Camera, an mmWave Radar and a Microphone.
 
 
 ### FLASH Dataset: Human Movement Detection using Ultra Wide Band Modules
