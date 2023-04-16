@@ -12,14 +12,27 @@ The first dataset is a multi-modal dataset for Alzheimer's Disease monitoring co
   
 ### Alzheimer’s Disease Monitoring Dataset: 
 
-* Task: Detecting 11 behavior biomarkers with a multi-modal hardware system in natural home environments, including cleaning the living area, taking medication, using mobile phones, writing, sitting, standing, moving in/out of chair/bed, walking, sleeping, eating, and drinking.
+* Task: Detect 11 behavior biomarkers in natural home environments, including cleaning the living area, taking medication, using mobile phones, writing, sitting, standing, moving in/out of chair/bed, walking, sleeping, eating, and drinking.
 * Sensor Modalities: Depth Camera, mmWave Radar and Microphone.
-* Number of Sensor Nodes (i.e., elderly subjects): 16
+* Number of Sensor Nodes: 16 nodes deployed in 16 elderly subjects' homes
 * Size of the dataset: about 8GB
 
 
-### FLASH Dataset: Human Movement Detection using Ultra Wide Band Modules
+### FLASH Dataset: 
 
+* Task: Select the high-band sector for mmWave beamforming in mobile V2X communication scenarios. 64 sectors in total. 
+* Sensor Modalities: GPS, LiDAR, and image.
+* Number of Sensor Nodes: Up to 210 nodes representing the data collected different settings (vehicles and scenarios). Only the data of 30 nodes is shared in the link.
+* Size of the dataset: about 1.5GB
+* Original paper of the dataset:
+@inproceedings{salehi2022flash,
+  title={FLASH: Federated learning for automated selection of high-band mmWave sectors},
+  author={Salehi, Batool and Gu, Jerry and Roy, Debashri and Chowdhury, Kaushik},
+  booktitle={IEEE INFOCOM 2022-IEEE Conference on Computer Communications},
+  pages={1719--1728},
+  year={2022},
+  organization={IEEE}
+}
 
 ### MHAD Dataset: Walking Activity Recognition using Inertial Measurement Unit Modules
 
@@ -29,7 +42,7 @@ The first dataset is a multi-modal dataset for Alzheimer's Disease monitoring co
 
 
 # Citation
-The code and datasets of this project are made available for non-commercial, academic research only. If you would like to use the code or datasets of this project, please cite the following papers:
+The code and datasets of this project are made available for non-commercial, academic research only. If you would like to use the code or the Alzheimer’s Disease Monitoring datasets of this project, please cite the following papers:
 ```
 @inproceedings{ouyang2023harmony,
   title={Harmony: Heterogeneous Multi-Modal Federated Learning through Disentangled Model Training},
