@@ -120,7 +120,7 @@ Second Stage: Federated Fusion Learning (among multimodal nodes)
 	    ```
     ---
 
-<!--
+
 # Citation
 The code and datasets of this project are made available for non-commercial, academic research only. If you would like to use the code or datasets of this project, please cite the following papers:
 ```
@@ -131,6 +131,6 @@ The code and datasets of this project are made available for non-commercial, aca
   year={2023}
 }
 ```
--->
+<!---->
     
 
