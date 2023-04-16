@@ -10,21 +10,31 @@ The first dataset is a multi-modal dataset for Alzheimer's Disease monitoring co
   The four pre-processed datasets can be downloaded in the [onedrive folder](https://mycuhk-my.sharepoint.com/personal/1155136315_link_cuhk_edu_hk/_layouts/15/onedrive.aspx?id=%2Fpersonal%2F1155136315%5Flink%5Fcuhk%5Fedu%5Fhk%2FDocuments%2FResearch%2FHarmony%2DDataset&ga=1). Please refer to the following discriptions of collecting and pre-processing for each dataset. 
   
   
-### Alzheimer’s Disease Monitoring Dataset: 
+### Alzheimer’s Disease Monitoring Dataset (self-collected): 
 
 * Task: Detect 11 behavior biomarkers in natural home environments, including cleaning the living area, taking medication, using mobile phones, writing, sitting, standing, moving in/out of chair/bed, walking, sleeping, eating, and drinking.
 * Sensor Modalities: Depth Camera, mmWave Radar and Microphone.
-* Number of Sensor Nodes: 16 nodes deployed in 16 elderly subjects' homes
-* Size of the dataset: about 8GB
+* Number of Sensor Nodes: 16 nodes deployed in 16 elderly subjects' homes.
+* Size of the dataset: About 8GB.
+* Original paper of the dataset:
+```
+@inproceedings{ouyang2023harmony,
+  title={Harmony: Heterogeneous Multi-Modal Federated Learning through Disentangled Model Training},
+  author={Ouyang, Xiaomin and Xie, Zhiyuan and Fu, Heming, and Chen, Sitong and Pan Li, and Ling Neiwen, and Xing, Guoliang, and Zhou Jiayu, and Huang Jianwei},
+  booktitle={Proceedings of the 21th Annual International Conference on Mobile Systems, Applications, and Services},
+  year={2023}
+}
+```
 
 
 ### FLASH Dataset: 
 
 * Task: Select the high-band sector for mmWave beamforming in mobile V2X communication scenarios. 64 sectors in total. 
 * Sensor Modalities: GPS, LiDAR, and image.
-* Number of Sensor Nodes: Up to 210 nodes representing the data collected different settings (vehicles and scenarios). Only the data of 30 nodes is shared in the link.
-* Size of the dataset: about 1.5GB
+* Number of Sensor Nodes: Up to 210 nodes representing the data collected in different settings (vehicles and scenarios). Only the data of 30 nodes is shared in the link.
+* Size of the dataset: About 1.5GB.
 * Original paper of the dataset:
+```
 @inproceedings{salehi2022flash,
   title={FLASH: Federated learning for automated selection of high-band mmWave sectors},
   author={Salehi, Batool and Gu, Jerry and Roy, Debashri and Chowdhury, Kaushik},
@@ -33,12 +43,42 @@ The first dataset is a multi-modal dataset for Alzheimer's Disease monitoring co
   year={2022},
   organization={IEEE}
 }
+```
 
-### MHAD Dataset: Walking Activity Recognition using Inertial Measurement Unit Modules
+### MHAD Dataset: 
 
+* Task: Recognize 11 human actions. 
+* Sensor Modalities: 3-axis accelerometer and skeleton data.
+* Number of Sensor Nodes: 12 nodes representing the data collected from 12 subjects.
+* Size of the dataset: about 165MB.
+* Original paper of the dataset:
+```
+@inproceedings{ofli2013berkeley,
+  title={Berkeley mhad: A comprehensive multimodal human action database},
+  author={Ofli, Ferda and Chaudhry, Rizwan and Kurillo, Gregorij and Vidal, Ren{\'e} and Bajcsy, Ruzena},
+  booktitle={2013 IEEE workshop on applications of computer vision (WACV)},
+  pages={53--60},
+  year={2013},
+  organization={IEEE}
+}
+```
 
-### USD Dataset: Gesture Recognition using Depth Camera
+### USC Dataset: Gesture Recognition using Depth Camera
 
+* Task: Recognize 12 human activities. 
+* Sensor Modalities: 3-axis accelerator and 3-axis gyroscope data.
+* Number of Sensor Nodes: 14 nodes representing the data collected from 14 subjects.
+* Size of the dataset: about 6MB.
+* Original paper of the dataset:
+```
+@inproceedings{zhang2012usc,
+  title={USC-HAD: A daily activity dataset for ubiquitous activity recognition using wearable sensors},
+  author={Zhang, Mi and Sawchuk, Alexander A},
+  booktitle={Proceedings of the 2012 ACM conference on ubiquitous computing},
+  pages={1036--1043},
+  year={2012}
+}
+```
 
 
 # Citation
