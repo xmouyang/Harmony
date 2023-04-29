@@ -107,11 +107,13 @@ def mmFedavg_encoder(opt, encoder, local_modality):
 
 	for modality_id in range(opt.num_of_modality):
 
-		mean_encoders[modality_id] = mean_encoders[modality_id] / count_modality[modality_id]
+		if count_modality[modality_id] != 0:
 
-		print("count_modality {}".format(count_modality[modality_id]))
-		print("mean_encoders {}".format(mean_encoders[modality_id]))
-		print("averaged mean_encoders: ", np.mean(mean_encoders[modality_id]))
+			mean_encoders[modality_id] = mean_encoders[modality_id] / count_modality[modality_id]
+
+			print("count_modality {}".format(count_modality[modality_id]))
+			print("mean_encoders {}".format(mean_encoders[modality_id]))
+			print("averaged mean_encoders: ", np.mean(mean_encoders[modality_id]))
 
 	return mean_encoders[0], mean_encoders[1]
 
@@ -143,11 +145,13 @@ def mmFedavg_classifier(opt, classifier, local_modality):
 
 	for modality_id in range(opt.num_of_modality):
 
-		mean_classifiers[modality_id] = mean_classifiers[modality_id] / count_modality[modality_id]
+		if count_modality[modality_id] != 0:
 
-		print("count_modality {}".format(count_modality[modality_id]))
-		print("mean_classifiers {}".format(mean_classifiers[modality_id]))
-		print("averaged mean_classifiers: ", np.mean(mean_classifiers[modality_id]))
+			mean_classifiers[modality_id] = mean_classifiers[modality_id] / count_modality[modality_id]
+
+			print("count_modality {}".format(count_modality[modality_id]))
+			print("mean_classifiers {}".format(mean_classifiers[modality_id]))
+			print("averaged mean_classifiers: ", np.mean(mean_classifiers[modality_id]))
 
 
 	return mean_classifiers[0], mean_classifiers[1]
