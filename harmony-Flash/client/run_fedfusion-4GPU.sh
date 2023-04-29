@@ -1,0 +1,12 @@
+CUDA_VISIBLE_DEVICES=0 python3 main_fusion.py --local_modality all --usr_id 6 &
+CUDA_VISIBLE_DEVICES=1 python3 main_fusion.py --local_modality all --usr_id 7 &
+CUDA_VISIBLE_DEVICES=1 python3 main_fusion.py --local_modality all --usr_id 8 &
+CUDA_VISIBLE_DEVICES=1 python3 main_fusion.py --local_modality all --usr_id 9 &
+CUDA_VISIBLE_DEVICES=2 python3 main_fusion.py --local_modality all --usr_id 16 &
+CUDA_VISIBLE_DEVICES=2 python3 main_fusion.py --local_modality all --usr_id 17 &
+CUDA_VISIBLE_DEVICES=2 python3 main_fusion.py --local_modality all --usr_id 18 &
+CUDA_VISIBLE_DEVICES=2 python3 main_fusion.py --local_modality all --usr_id 19 &
+CUDA_VISIBLE_DEVICES=3 python3 main_fusion.py --local_modality all --usr_id 26 &
+CUDA_VISIBLE_DEVICES=3 python3 main_fusion.py --local_modality all --usr_id 27 &
+CUDA_VISIBLE_DEVICES=3 python3 main_fusion.py --local_modality all --usr_id 28 &
+CUDA_VISIBLE_DEVICES=0 python3 main_fusion.py --local_modality all --usr_id 29 &
