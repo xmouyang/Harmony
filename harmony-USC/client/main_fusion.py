@@ -121,7 +121,7 @@ def parse_option():
     opt.model_path = './save_uni_FL/{}_models'.format(opt.dataset)
     opt.result_path = './save_fedfuse_results/node_{}/{}_results/'.format(opt.usr_id, opt.dataset)
 
-    opt.load_folder = os.path.join(opt.model_path, opt.model_name)
+    opt.load_folder = opt.model_path
     if not os.path.isdir(opt.load_folder):
         os.makedirs(opt.load_folder)
 
