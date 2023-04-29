@@ -529,15 +529,15 @@ def main():
             reset_model_parameter(new_w, model)
             w_parameter_init = new_w
 
-            if (epoch / opt.fl_epoch) == 19 and opt.usr_id == 0:
-                print("Save FL model!")
-                fl_model_path = "./save_uniFL/{}_models/".format(opt.dataset)
-                if not os.path.isdir(fl_model_path):
-                    os.makedirs(fl_model_path)
-                if opt.local_modality == 'acc':
-                    save_model(model.encoder, optimizer, opt, opt.epochs, os.path.join(fl_model_path, 'last_acc.pth'))
-                else:
-                    save_model(model.encoder, optimizer, opt, opt.epochs, os.path.join(fl_model_path, 'last_skeleton.pth'))
+            # if (epoch / opt.fl_epoch) == 19 and opt.usr_id == 0:
+            #     print("Save FL model!")
+            #     fl_model_path = "./save_uniFL/{}_models/".format(opt.dataset)
+            #     if not os.path.isdir(fl_model_path):
+            #         os.makedirs(fl_model_path)
+            #     if opt.local_modality == 'acc':
+            #         save_model(model.encoder, optimizer, opt, opt.epochs, os.path.join(fl_model_path, 'last_acc.pth'))
+            #     else:
+            #         save_model(model.encoder, optimizer, opt, opt.epochs, os.path.join(fl_model_path, 'last_skeleton.pth'))
                 
     # evaluation
     if opt.local_modality == 'both':
@@ -545,11 +545,20 @@ def main():
     else:
         loss, val_acc, confusion = validate_single(val_loader, model, criterion, opt)
 
-    print("Testing accuracy of node {} is :".format(opt.usr_id))
+    print("Testing accuracy of node {} is :".format(opt.usr_id), val_acc)
     np.savetxt(opt.result_path + "record_loss.txt".format(opt.usr_id), record_loss)
     np.savetxt(opt.result_path + "record_acc.txt".format(opt.usr_id), record_acc)
     np.savetxt(opt.result_path + "record_confusion.txt".format(opt.usr_id), confusion)
 
+    print("Save FL model!")
+    fl_model_path = "./save_uni_FL/{}_models/".format(opt.dataset)
+    if not os.path.isdir(fl_model_path):
+        os.makedirs(fl_model_path)
+    if opt.local_modality == 'acc':
+        save_model(model.encoder, optimizer, opt, opt.epochs, os.path.join(fl_model_path, 'last_acc.pth'))
+    else:
+        save_model(model.encoder, optimizer, opt, opt.epochs, os.path.join(fl_model_path, 'last_skeleton.pth'))
+                    
     comm.disconnect(1)
 
 

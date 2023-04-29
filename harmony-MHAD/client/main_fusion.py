@@ -172,7 +172,7 @@ def set_loader(opt):
 
 def load_single_model(opt, modality):
 
-    ckpt_path = opt.load_folder + "/last_" + modality + ".pth"
+    ckpt_path = opt.load_folder + "last_" + modality + ".pth"
     ckpt = torch.load(ckpt_path, map_location='cpu')
     state_dict = ckpt['model']
 
