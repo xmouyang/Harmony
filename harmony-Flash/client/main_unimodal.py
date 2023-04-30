@@ -603,12 +603,14 @@ def main():
     np.savetxt(opt.result_path + "all_time_record.txt", all_time_record)
     
 
-    if (opt.usr_id % 10) == 6:
+    if opt.usr_id == 6:
+
         print("Save FL model!")
         fl_model_path = "./save_uni_FL/{}_models/".format(opt.dataset)
 
         if not os.path.isdir(fl_model_path):
             os.makedirs(fl_model_path)
+
         if opt.local_modality == 'gps':
             save_model(model.encoder, optimizer, opt, opt.epochs, os.path.join(fl_model_path, 'last_gps.pth'))
         elif opt.local_modality == 'lidar':
