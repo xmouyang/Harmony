@@ -40,7 +40,7 @@ def parse_option():
                         help='user id')
     parser.add_argument('--local_modality', type=str, default='audio',
                         choices=['audio', 'depth', 'radar', 'all', 'AD', 'DR', 'AR'], help='local_modality')
-    parser.add_argument('--server_address', type=str, default='10.54.20.14',
+    parser.add_argument('--server_address', type=str, default='10.54.20.13',
                         help='server_address')
     parser.add_argument('--fl_epoch', type=int, default=10,
                     help='communication to server after the epoch of local training')
