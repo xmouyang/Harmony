@@ -324,7 +324,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 				#if hello message, barrier until all clients arrive and send a message to start
 				if mess_type == -1:
 					try:
-						barrier_start.wait(120)
+						barrier_start.wait(300)
 					except Exception as e:
 						print("start wait timeout...")
 
@@ -336,7 +336,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 				elif mess_type == 1:
 
 					try:
-						barrier_start.wait(10)
+						barrier_start.wait(1200)
 					except Exception as e:
 						print("wait W timeout...")
 
@@ -376,7 +376,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
 						# print("error 1")
 					try:
-						barrier_W.wait(120)
+						barrier_W.wait(1200)
 					except Exception as e:
 						print("wait W timeout...")
 
@@ -418,7 +418,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
 				elif mess_type == 10:
 					try:
-						barrier_end.wait(500)
+						barrier_end.wait(3000)
 					except Exception as e:
 						print("finish timeout...")
 					break
