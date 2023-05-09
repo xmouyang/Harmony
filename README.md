@@ -127,7 +127,7 @@ The code and datasets of this project are made available for non-commercial, aca
 ```
 @inproceedings{ouyang2023harmony,
   title={Harmony: Heterogeneous Multi-Modal Federated Learning through Disentangled Model Training},
-  author={Ouyang, Xiaomin and Xie, Zhiyuan and Fu, Heming, and Chen, Sitong and Pan Li, and Ling Neiwen, and Xing, Guoliang, and Zhou Jiayu, and Huang Jianwei},
+  author={Ouyang, Xiaomin and Xie, Zhiyuan and Fu, Heming and Chen, Sitong and Pan, Li and Ling, Neiwen and Xing, Guoliang and Zhou, Jiayu and Huang, Jianwei},
   booktitle={Proceedings of the 21th Annual International Conference on Mobile Systems, Applications, and Services},
   year={2023}
 }
