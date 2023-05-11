@@ -16,14 +16,10 @@ def parse_option():
     parser = argparse.ArgumentParser('argument for training')
 
     ## FL
-    parser.add_argument('--fl_round', type=int, default=22,
+    parser.add_argument('--fl_round', type=int, default=21,
                     help='communication to server after the epoch of local training')
     parser.add_argument('--num_of_users', type=int, default=12,
                     help='num of users in FL')
-    parser.add_argument('--num_of_modality', type=int, default=3,
-                    help='num of modality in model')
-    parser.add_argument('--modality_group', type=int, default=0,#0 for audio, 1 for depth, 2 for radar
-                    help='modality')
 
     ## system
     parser.add_argument('--start_wait_time', type=int, default=300,
@@ -34,7 +30,10 @@ def parse_option():
                     help='end_wait_time')
 
     ## model
-
+    parser.add_argument('--num_of_modality', type=int, default=3,
+                    help='num of modality in model')
+    parser.add_argument('--modality_group', type=int, default=0,
+                    help='modality_group')
     parser.add_argument('--dim_enc_0', type=int, default = 1496256)
     parser.add_argument('--dim_enc_1', type=int, default = 2221056)
     parser.add_argument('--dim_enc_2', type=int, default = 626240)
@@ -72,20 +71,31 @@ conver_indicator = 1e5
 mean_encoder_0 = np.zeros(opt.dim_enc_0)
 mean_encoder_1 = np.zeros(opt.dim_enc_1)
 mean_encoder_2 = np.zeros(opt.dim_enc_2)
-# mean_encoder_all = np.zeros(opt.dim_enc_multi)
+mean_encoder_all = np.zeros(opt.dim_enc_multi)
 
 mean_classifier_0 = np.zeros(opt.dim_cls_0)
 mean_classifier_1 = np.zeros(opt.dim_cls_1)
 mean_classifier_2 = np.zeros(opt.dim_cls_2)
-# mean_classifier_multi = np.zeros(opt.dim_cls_multi)
+mean_classifier_multi = np.zeros(opt.dim_cls_multi)
 
 wait_time_record = np.zeros(opt.fl_round)
 aggregation_time_record = np.zeros(opt.fl_round)
 server_start_time_record = np.zeros((opt.num_of_users, opt.fl_round))
 
-time_record2node = np.zeros((opt.num_of_users, 2))
-##the first one is completion time of the uniFL system, the second one is the ratio of node dividing the mean time among the system
 
+# for uniFL
+def temp_to_user(temp_id, local_modality):
+
+	if local_modality == 0:
+		reorder_array = np.loadtxt("reorder_id_stage1_audio.txt").astype(int)
+	elif local_modality == 1:
+		reorder_array = np.loadtxt("reorder_id_stage1_depth.txt").astype(int)
+	elif local_modality == 2:
+		reorder_array = np.loadtxt("reorder_id_stage1_radar.txt").astype(int)
+
+	user_id = reorder_array[temp_id, 1]
+
+	return user_id
 
 def mmFedavg_encoder(opt, encoder, local_modality):
 
@@ -94,6 +104,7 @@ def mmFedavg_encoder(opt, encoder, local_modality):
 	encoder_0_record = np.zeros(opt.dim_enc_0)
 	encoder_1_record = np.zeros(opt.dim_enc_1)
 	encoder_2_record = np.zeros(opt.dim_enc_2)
+	encoder_multi_record = np.zeros(opt.dim_enc_multi)
 
 	for user_id in range(opt.num_of_users):
 
@@ -105,6 +116,13 @@ def mmFedavg_encoder(opt, encoder, local_modality):
 			count_modality[1] += 1
 		elif local_modality[user_id] == 2:
 			encoder_2_record += encoder[user_id][0:opt.dim_enc_2]
+			count_modality[2] += 1
+		else:
+			encoder_0_record += encoder[user_id][0:opt.dim_enc_0]
+			encoder_1_record += encoder[user_id][opt.dim_enc_0 : opt.dim_enc_0 + opt.dim_enc_1]
+			encoder_2_record += encoder[user_id][opt.dim_enc_0 + opt.dim_enc_1:]
+			count_modality[0] += 1
+			count_modality[1] += 1
 			count_modality[2] += 1
 
 	if count_modality[0] != 0:
@@ -119,7 +137,11 @@ def mmFedavg_encoder(opt, encoder, local_modality):
 		encoder_2_record = encoder_2_record / count_modality[2]
 		print("count_modality encoder 2: {}".format(count_modality[2]))
 
-	return encoder_0_record, encoder_1_record, encoder_2_record
+	encoder_multi_record[0: opt.dim_enc_0] = encoder_0_record
+	encoder_multi_record[opt.dim_enc_0 : opt.dim_enc_0 + opt.dim_enc_1] = encoder_1_record
+	encoder_multi_record[opt.dim_enc_0 + opt.dim_enc_1:] = encoder_2_record
+
+	return encoder_0_record, encoder_1_record, encoder_2_record, encoder_multi_record
 
 
 def mmFedavg_classifier(opt, classifier, local_modality):
@@ -129,6 +151,7 @@ def mmFedavg_classifier(opt, classifier, local_modality):
 	classifier_0_record = np.zeros(opt.dim_cls_0)
 	classifier_1_record = np.zeros(opt.dim_cls_1)
 	classifier_2_record = np.zeros(opt.dim_cls_2)
+	classifier_multi_record = np.zeros(opt.dim_cls_multi)
 
 	for user_id in range(opt.num_of_users):
 
@@ -138,6 +161,8 @@ def mmFedavg_classifier(opt, classifier, local_modality):
 			classifier_1_record += classifier[user_id][0:opt.dim_cls_1]
 		elif local_modality[user_id] == 2:
 			classifier_2_record += classifier[user_id][0:opt.dim_cls_2]
+		else:
+			classifier_multi_record += classifier[user_id][0:opt.dim_cls_multi]
 			
 		count_modality[local_modality[user_id]] += 1
 
@@ -154,18 +179,19 @@ def mmFedavg_classifier(opt, classifier, local_modality):
 		classifier_2_record = classifier_2_record / count_modality[2]
 		print("count_modality classifier 2: {}".format(count_modality[2]))
 
+	if count_modality[3] != 0:
+		classifier_multi_record = classifier_multi_record / count_modality[3]
+		print("count_modality classifier multi: {}".format(count_modality[3]))
 
-	return classifier_0_record, classifier_1_record, classifier_2_record
+	return classifier_0_record, classifier_1_record, classifier_2_record, classifier_multi_record
 
 
 def server_update():
 	
 	global opt, ENC, CLS, Local_Modality, iteration_count
-	global mean_encoder_0, mean_encoder_1, mean_encoder_2
-	global mean_classifier_0, mean_classifier_1, mean_classifier_2
-	global aggregation_time_record, wait_time_record, server_start_time_record, time_record2node
-
-	print("iteration_count: ", iteration_count)
+	global mean_encoder_0, mean_encoder_1, mean_encoder_2, mean_encoder_all
+	global mean_classifier_0, mean_classifier_1, mean_classifier_2, mean_classifier_multi
+	global aggregation_time_record, wait_time_record, server_start_time_record
 
 	aggregate_time1 = time.time()
 	wait_time_record[iteration_count] = aggregate_time1 - np.min(server_start_time_record[:, iteration_count])
@@ -173,37 +199,19 @@ def server_update():
 
 	## mmFedavg for model encoders
 	print("Iteration {}: mmFedavg of encoders".format(iteration_count))
-	mean_encoder_0, mean_encoder_1, mean_encoder_2 = mmFedavg_encoder(opt, ENC, Local_Modality)
+	mean_encoder_0, mean_encoder_1, mean_encoder_2, mean_encoder_all = mmFedavg_encoder(opt, ENC, Local_Modality)
 
 	## mmFedavg for classifiers
 	print("Iteration {}: mmFedavg of classifiers".format(iteration_count))
-	mean_classifier_0, mean_classifier_1, mean_classifier_2 = mmFedavg_classifier(opt, CLS, Local_Modality)
+	mean_classifier_0, mean_classifier_1, mean_classifier_2, mean_classifier_multi = mmFedavg_classifier(opt, CLS, Local_Modality)
 	# print("error 3")
 
 	aggregate_time2 = time.time()
 	aggregation_time_record[iteration_count] = aggregate_time2 - aggregate_time1
 	print("server aggregation time:", aggregation_time_record[iteration_count])
 
-	##the first one is completion time of the uniFL system, the second one is the ratio of node dividing the mean time among the system
-	print("server_start_time_record", server_start_time_record)
-	system_completion_time = aggregate_time2 - np.min(server_start_time_record[:, iteration_count])
-	print("system_completion_time:", system_completion_time)
-
-	for user_id in range(opt.num_of_users):
-		time_record2node[user_id, 0] = system_completion_time
-		time_record2node[user_id, 1] = server_start_time_record[user_id, iteration_count+1] - server_start_time_record[user_id, iteration_count]
-
-	mean_time_node = np.mean(time_record2node[:, 1])
-	print("mean_time_node:", mean_time_node)
-
-	if mean_time_node != 0:
-		for user_id in range(opt.num_of_users):
-			time_record2node[user_id, 1] = time_record2node[user_id, 1] / mean_time_node
-
-	print("time_record2node:", time_record2node)
-
 	iteration_count = iteration_count + 1
-	# print("iteration_count: ", iteration_count)
+	print("iteration_count: ", iteration_count)
 
 	
 def reinitialize():
@@ -213,7 +221,7 @@ def reinitialize():
 	iteration_count = 0
 	print("Trial: ", trial_count)
 
-	global opt, NUM_OF_WAIT, wait_time_record, aggregation_time_record, server_start_time_record, time_record2node
+	global opt, NUM_OF_WAIT, wait_time_record, aggregation_time_record, server_start_time_record
 	print("All of Server Wait Time:", np.sum(wait_time_record))
 	print("All of Server Aggregate Time:", np.sum(aggregation_time_record))
 
@@ -228,7 +236,6 @@ def reinitialize():
 	wait_time_record = np.zeros(opt.fl_round)
 	aggregation_time_record = np.zeros(opt.fl_round)
 	server_start_time_record = np.zeros((opt.num_of_users, opt.fl_round))
-	time_record2node = np.zeros((opt.num_of_users, 2))
 
 	opt = parse_option()
 	NUM_OF_WAIT = opt.num_of_users
@@ -242,17 +249,17 @@ def reinitialize():
 	Update_Flag = np.ones(opt.num_of_users)
 	Local_Modality = np.zeros(opt.num_of_users).astype(int)
 
-	global mean_encoder_0, mean_encoder_1, mean_encoder_2, mean_classifier_0, mean_classifier_1, mean_classifier_2
+	global mean_encoder_0, mean_encoder_1, mean_encoder_2, mean_encoder_all, mean_classifier_0, mean_classifier_1, mean_classifier_2, mean_classifier_multi
 	
 	mean_encoder_0 = np.zeros(opt.dim_enc_0)
 	mean_encoder_1 = np.zeros(opt.dim_enc_1)
 	mean_encoder_2 = np.zeros(opt.dim_enc_2)
-	# mean_encoder_all = np.zeros(opt.dim_enc_multi)
+	mean_encoder_all = np.zeros(opt.dim_enc_multi)
 
 	mean_classifier_0 = np.zeros(opt.dim_cls_0)
 	mean_classifier_1 = np.zeros(opt.dim_cls_1)
 	mean_classifier_2 = np.zeros(opt.dim_cls_2)
-	# mean_classifier_multi = np.zeros(opt.dim_cls_multi)
+	mean_classifier_multi = np.zeros(opt.dim_cls_multi)
 
 	barrier_update()
 
@@ -291,10 +298,16 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 				size = struct.unpack('i', header)
 
 				#receive the id of client
+				# u_id = self.request.recv(4)
+				# temp_id = struct.unpack('i',u_id)
+
+				# user_id = int(temp_id[0])
+				# # print("user_id:", user_id)
+
+				#receive the id of client
 				u_id = self.request.recv(4)
 				temp_id = struct.unpack('i',u_id)
-
-				user_id = int(temp_id[0])
+				user_id = temp_to_user(int(temp_id[0]), opt.modality_group)
 				# print("user_id:", user_id)
 
 				# receive the type of message, defination in communication.py
@@ -315,6 +328,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 						barrier_start.wait(opt.start_wait_time)
 					except Exception as e:
 						print("start wait timeout...")
+						print(e)
 
 					start_message = 'start'
 					mess_size = self.send2node(start_message)
@@ -327,12 +341,13 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 						barrier_start.wait(opt.start_wait_time)
 					except Exception as e:
 						print("wait W timeout...")
+						print(e)
 
 					temp_modality = pickle.loads(recv_data)
 
-					print(user_id, temp_modality)
-
-					if temp_modality == 'audio':
+					if temp_modality == 'all':
+						Local_Modality[user_id] = 3
+					elif temp_modality == 'audio':
 						Local_Modality[user_id] = 0
 					elif temp_modality == 'depth':
 						Local_Modality[user_id] = 1
@@ -340,18 +355,19 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 						Local_Modality[user_id] = 2
 					print("client {} has modality {}".format(user_id, Local_Modality[user_id]))
 
-					server_start_time_record[user_id, 0] = time.time()##initial time of user_id
-
 
 				#if W message, server update for model aggregation
 				elif mess_type == 0:
 
-					server_start_time_record[user_id, iteration_count+1] = time.time()
+					server_start_time_record[user_id, iteration_count] = time.time()
 
 					weights = pickle.loads(recv_data)
 					print(weights.shape)
 
-					if Local_Modality[user_id] == 0:
+					if Local_Modality[user_id] == 3:
+						ENC[user_id] = weights[0:opt.dim_enc_multi]
+						CLS[user_id] = weights[opt.dim_enc_multi:]
+					elif Local_Modality[user_id] == 0:
 						ENC[user_id][0:opt.dim_enc_0] = weights[0:opt.dim_enc_0]## the encoder weights are saved on the head for single modality nodes
 						CLS[user_id][0:opt.dim_cls_0] = weights[opt.dim_enc_0:]## the classifier weights are saved on the head for single modality nodes
 					elif Local_Modality[user_id] == 1:
@@ -366,26 +382,21 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 						barrier_W.wait(opt.W_wait_time)
 					except Exception as e:
 						print("wait W timeout...")
+						print(e)
 
-					# print("error 1")
-					if Local_Modality[user_id] == 0:
+					if Local_Modality[user_id] == 3:
+						send_weight = np.append(mean_encoder_all, mean_classifier_multi)
+					elif Local_Modality[user_id] == 0:
 						send_weight = np.append(mean_encoder_0, mean_classifier_0)
 					elif Local_Modality[user_id] == 1:
 						send_weight = np.append(mean_encoder_1, mean_classifier_1)
 					elif Local_Modality[user_id] == 2:
 						send_weight = np.append(mean_encoder_2, mean_classifier_2)
 
-					downlink_time1 = time.time()
 					mess_size = self.send2node(send_weight)
-					downlink_time2 = time.time()
-					model_downlink_time = downlink_time2 - downlink_time1
-					print("send New_W to client {} with the size of {}, shape of {}: time {}".format(user_id, mess_size, send_weight.shape, model_downlink_time))
 
-
-					## send time or ratio for resource allocation
-					print("time_record2node to client {}:".format(user_id), time_record2node[user_id])
-
-					mess_size = self.send2node(time_record2node[user_id])
+					# print(send_weight.shape)
+					print("send New_W to client {} with the size of {}, and shape of {}".format(user_id, mess_size, send_weight.shape))
 
 
 					#if Update_Flag=0, stop the specific client
@@ -403,9 +414,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 						sig_stop = struct.pack("i",1)
 					else:
 						sig_stop = struct.pack("i",0)
-
 					self.request.sendall(sig_stop)
-
 
 
 				elif mess_type == 9:
@@ -426,8 +435,8 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
 
 if __name__ == "__main__":
-
-	HOST = "0.0.0.0"#127.0.0.1
+	# HOST, PORT = "0.0.0.0", 9998 
+	HOST = "0.0.0.0"
 
 	if opt.modality_group == 0:
 		port_num = 9999#30001

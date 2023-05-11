@@ -49,9 +49,6 @@ def parse_option():
     parser.add_argument('--dim_all_2', type=int, default = 629771)
     parser.add_argument('--dim_all_multi', type=int, default=4352539)
 
-    parser.add_argument('--server_folder', type=str, default='./save_server_enc_fl/',
-                        # choices=['save_server_enc_cen', 'save_server_enc_fl'], 
-                        help='server_folder')
 
     opt = parser.parse_args()
 
@@ -84,6 +81,14 @@ wait_time_record = np.zeros(opt.fl_round)
 aggregation_time_record = np.zeros(opt.fl_round)
 server_start_time_record = np.zeros((opt.num_of_users, opt.fl_round))
 
+
+# for multimodal nodes
+def temp_to_user(temp_id, local_modality):
+
+	reorder_array = np.loadtxt("reorder_id_stage2.txt").astype(int)
+	user_id = reorder_array[temp_id, 1]
+
+	return user_id
 
 def encoder_bias_group(opt, encoder_dis):
 
@@ -171,7 +176,7 @@ def reinitialize():
 
 	global mean_classifier_multi, encoder_dis_record, group_index, group_record, nor_enc_dis
 
-	opt.save_folder = "./save_fedefuse_server_group_{}".format(opt.num_of_group) + "/"
+	opt.save_folder = "./save_fedfuse_server_group_{}".format(opt.num_of_group) + "/"
 	if not os.path.isdir(opt.save_folder):
 	    os.makedirs(opt.save_folder)
 
@@ -237,8 +242,14 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 				size = struct.unpack('i', header)
 
 				#receive the id of client
+				# u_id = self.request.recv(4)
+				# user_id = int(struct.unpack('i',u_id)[0])
+
+				#receive the id of client
 				u_id = self.request.recv(4)
-				user_id = int(struct.unpack('i',u_id)[0])
+				temp_id = struct.unpack('i',u_id)
+				user_id = temp_to_user(int(temp_id[0]), 3)
+				# print("user_id:", user_id)
 
 				# receive the type of message, defination in communication.py
 				mess_type = self.request.recv(4)
