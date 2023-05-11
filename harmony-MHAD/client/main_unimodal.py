@@ -444,8 +444,8 @@ def set_commu(opt):
 
     if opt.local_modality == "skeleton":
         server_port = 9997
-        if opt.usr_id > 5:
-            user_id = opt.usr_id - 3
+        # if opt.usr_id > 5:
+        #     user_id = opt.usr_id - 3
     else:
         # user_id = opt.usr_id
         server_port = 9998
