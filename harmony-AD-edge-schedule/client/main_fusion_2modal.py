@@ -14,13 +14,17 @@ from util import AverageMeter
 from util import adjust_learning_rate, warmup_learning_rate, accuracy
 from util import set_optimizer, save_model
 
-from model import MySingleModel, My3Model
+from model import MySingleModel, My3Model, My2Model
 import data_pre as data
 import numpy as np
 from sklearn.model_selection import train_test_split
 from communication import COMM
 import random
-# torch.backends.cudnn.enabled=False
+
+import copy
+from sklearn.metrics.pairwise import cosine_similarity
+from scipy.spatial import distance
+import torch.optim as optim
 
 try:
     import apex
@@ -35,11 +39,13 @@ def parse_option():
     parser.add_argument('--usr_id', type=int, default=0,
                         help='user id')
     parser.add_argument('--local_modality', type=str, default='audio',
-                        choices=['audio', 'depth', 'radar', 'all'], help='local_modality')
+                        choices=['audio', 'depth', 'radar', 'all', 'AD', 'DR', 'AR'], help='local_modality')
     parser.add_argument('--server_address', type=str, default='10.54.20.13',
                         help='server_address')
     parser.add_argument('--fl_epoch', type=int, default=10,
                     help='communication to server after the epoch of local training')
+    parser.add_argument('--incomplete_flag', type=int, default=1,
+                        help='incomplete_flag')
 
     parser.add_argument('--print_freq', type=int, default=5,
                         help='print frequency')
@@ -47,7 +53,7 @@ def parse_option():
                         help='batch_size')
     parser.add_argument('--num_workers', type=int, default=16,
                         help='num of workers to use')
-    parser.add_argument('--epochs', type=int, default=200,
+    parser.add_argument('--epochs', type=int, default=100,
                         help='number of training epochs')
 
     # optimization
@@ -83,6 +89,19 @@ def parse_option():
     parser.add_argument('--trial', type=str, default='0',
                         help='id for recording multiple runs')
 
+    parser.add_argument('--dim_enc_0', type=int, default = 1496256)
+    parser.add_argument('--dim_enc_1', type=int, default = 2221056)
+    parser.add_argument('--dim_enc_2', type=int, default = 626240)
+    parser.add_argument('--dim_enc_multi', type=int, default = 4343552)
+    parser.add_argument('--dim_cls_0', type=int, default = 2651)
+    parser.add_argument('--dim_cls_1', type=int, default = 2827)
+    parser.add_argument('--dim_cls_2', type=int, default = 3531)
+    parser.add_argument('--dim_cls_multi', type=int, default = 8987)
+    parser.add_argument('--dim_all_0', type=int, default = 1498907)
+    parser.add_argument('--dim_all_1', type=int, default = 2223883)
+    parser.add_argument('--dim_all_2', type=int, default = 629771)
+    parser.add_argument('--dim_all_multi', type=int, default=4352539)
+
     opt = parser.parse_args()
 
     iterations = opt.lr_decay_epochs.split(',')
@@ -104,13 +123,18 @@ def parse_option():
         else:
             opt.warmup_to = opt.learning_rate
 
-    # set the path according to the environment
-    opt.result_path = './save_unifl_results/node_{}/{}_results/'.format(opt.usr_id, opt.local_modality)
+    if opt.incomplete_flag == 1:
+        opt.model_path = './save_uniFL/{}_models/'.format(opt.dataset)
+        opt.result_path = './save_fedfuse_results/node_{}/{}_results/'.format(opt.usr_id, opt.local_modality)
+
+    opt.load_folder = os.path.join(opt.model_path)
 
     if not os.path.isdir(opt.result_path):
         os.makedirs(opt.result_path)
 
+
     return opt
+
 
 
 def set_loader(opt):
@@ -118,9 +142,8 @@ def set_loader(opt):
     # load labeled train and test data
     print("train labeled data:")
 
-    if opt.local_modality == "all":
-        total_dataset = data.Multimodal_dataset(opt.usr_id)
-        
+    if opt.local_modality in ["all", 'AD', 'DR', 'AR']:
+        total_dataset = data.Multimodal_dataset(opt.usr_id) 
     else:
         total_dataset = data.Unimodal_dataset(opt.usr_id, opt.local_modality)
     
@@ -128,6 +151,7 @@ def set_loader(opt):
     sample_index_path = "./sample_index/node_{}/".format(opt.usr_id)
     all_train_sample_index = np.loadtxt(sample_index_path + "train_sample_index.txt")
     all_test_sample_index = np.loadtxt(sample_index_path + "test_sample_index.txt")
+    # all_incomplete_sample_index = np.loadtxt(sample_index_path + "incomplete_sample_index.txt")
 
 
     if len(all_train_sample_index) < opt.num_of_train:
@@ -137,12 +161,6 @@ def set_loader(opt):
 
     train_sample_index = all_train_sample_index[0:opt.num_of_train]
     test_sample_index = all_test_sample_index[0:opt.num_of_test]
-
-    ##set1, only add incomplete depth data on multimodal nodes
-    if opt.usr_id >= 6:
-        if opt.local_modality == "depth":#opt.local_modality == "audio" or opt.local_modality == "depth":
-            all_incomplete_sample_index = np.loadtxt(sample_index_path + "incomplete_sample_index.txt")
-            train_sample_index = np.append(train_sample_index, all_incomplete_sample_index)
     print(len(train_sample_index))
     print(len(test_sample_index))
 
@@ -168,14 +186,50 @@ def set_loader(opt):
     return train_loader, val_loader
 
 
+
+
+def load_single_model(opt, modality):
+
+    ckpt_path = opt.load_folder + "/last_" + modality + ".pth"
+    ckpt = torch.load(ckpt_path, map_location='cpu')
+    state_dict = ckpt['model']
+
+    if torch.cuda.is_available():
+        # if torch.cuda.device_count() <= 1:
+        new_state_dict = {}
+        for k, v in state_dict.items():
+            k = k.replace("module.", "")
+            new_state_dict[k] = v
+        state_dict = new_state_dict
+
+    return state_dict
+
+
 def set_model(opt):
 
-    if opt.local_modality == "all":
-        model = My3Model(num_classes = opt.num_class)
-    else:
-        model = MySingleModel(num_classes = opt.num_class, modality = opt.local_modality)
-
     criterion = torch.nn.CrossEntropyLoss()
+
+    if opt.local_modality == "all":
+        model = My3Model(num_classes=opt.num_class)
+        state_dict_1 = load_single_model(opt, "audio")
+        state_dict_2 = load_single_model(opt, "depth")
+        state_dict_3 = load_single_model(opt, "radar")
+        model.encoder.encoder_1.load_state_dict(state_dict_1)
+        model.encoder.encoder_2.load_state_dict(state_dict_2)
+        model.encoder.encoder_3.load_state_dict(state_dict_3)
+    elif opt.local_modality in ['AD', 'DR', 'AR']:
+        model = My2Model(num_classes = opt.num_class, modality = opt.local_modality)
+        if opt.local_modality == "AD":
+            state_dict_1 = load_single_model(opt, "audio")
+            state_dict_2 = load_single_model(opt, "depth")    
+        elif opt.local_modality == "DR":  
+            state_dict_1 = load_single_model(opt, "depth")
+            state_dict_2 = load_single_model(opt, "radar")
+        elif opt.local_modality == "AR":  
+            state_dict_1 = load_single_model(opt, "audio")
+            state_dict_2 = load_single_model(opt, "radar")  
+        model.encoder.encoder_1.load_state_dict(state_dict_1)
+        model.encoder.encoder_2.load_state_dict(state_dict_2) 
 
     if torch.cuda.is_available():
         model = model.cuda()
@@ -184,58 +238,6 @@ def set_model(opt):
 
     return model, criterion
 
-
-def train_single(train_loader, model, criterion, optimizer, epoch, opt):
-    """one epoch training"""
-    model.train()
-
-    batch_time = AverageMeter()
-    data_time = AverageMeter()
-    losses = AverageMeter()
-    top1 = AverageMeter()
-
-    end = time.time()
-    for idx, (input_data1, labels) in enumerate(train_loader):
-        data_time.update(time.time() - end)
-
-        if torch.cuda.is_available():
-            input_data1 = input_data1.cuda()
-            labels = labels.cuda()
-        bsz = input_data1.shape[0]
-
-        # warm-up learning rate
-        # warmup_learning_rate(opt, epoch, idx, len(train_loader), optimizer)
-
-        output = model(input_data1)
-        loss = criterion(output, labels)
-
-        acc1, acc5 = accuracy(output, labels, topk=(1, 5))
-
-        # update metric
-        losses.update(loss.item(), bsz)
-        top1.update(acc1[0], bsz)
-
-        # SGD
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        # measure elapsed time
-        batch_time.update(time.time() - end)
-        end = time.time()
-
-        # print info
-        if (idx + 1) % opt.print_freq == 0:
-            print('Train: [{0}][{1}/{2}]\t'
-                  'BT {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                  'DT {data_time.val:.3f} ({data_time.avg:.3f})\t'
-                  'loss {loss.val:.3f} ({loss.avg:.3f})\t'
-                  'Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t'.format(
-                   epoch, idx + 1, len(train_loader), batch_time=batch_time,
-                   data_time=data_time, loss=losses, top1=top1))
-            sys.stdout.flush()
-
-    return losses.avg
 
 
 def train_multi(train_loader, model, criterion, optimizer, epoch, opt):
@@ -247,6 +249,7 @@ def train_multi(train_loader, model, criterion, optimizer, epoch, opt):
     losses = AverageMeter()
     top1 = AverageMeter()
 
+    # label_list = []
 
     end = time.time()
     for idx, (input_data1, input_data2, input_data3, labels) in enumerate(train_loader):
@@ -263,8 +266,18 @@ def train_multi(train_loader, model, criterion, optimizer, epoch, opt):
         # warmup_learning_rate(opt, epoch, idx, len(train_loader), optimizer)
 
         # compute loss
-        output = model(input_data1, input_data2, input_data3)
+        if opt.local_modality == "all":
+            output = model(input_data1, input_data2, input_data3)
+        elif opt.local_modality == "AD":
+            output = model(input_data1, input_data2)
+        elif opt.local_modality == "DR":
+            output = model(input_data2, input_data3)
+        elif opt.local_modality == "AR":
+            output = model(input_data1, input_data3)
         loss = criterion(output, labels)
+
+        # label_list.extend(labels.cpu().numpy())
+        # pred1_list.extend(output.max(1)[1].cpu().numpy())
 
         acc1, acc5 = accuracy(output, labels, topk=(1, 5))
 
@@ -294,54 +307,6 @@ def train_multi(train_loader, model, criterion, optimizer, epoch, opt):
 
     return losses.avg
 
-
-def validate_single(val_loader, model, criterion, opt):
-    """validation"""
-    model.eval()
-
-    batch_time = AverageMeter()
-    losses = AverageMeter()
-    top1 = AverageMeter()
-
-    confusion = np.zeros((opt.num_class, opt.num_class))
-
-    with torch.no_grad():
-        end = time.time()
-        for idx, (input_data1, labels) in enumerate(val_loader):
-
-            if torch.cuda.is_available():
-                input_data1 = input_data1.float().cuda()
-                labels = labels.cuda()
-            bsz = labels.shape[0]
-
-            # forward
-            output = model(input_data1)
-            loss = criterion(output, labels)
-
-            # update metric
-            acc1, acc5 = accuracy(output, labels, topk=(1, 5))
-            losses.update(loss.item(), bsz)
-            top1.update(acc1[0], bsz)
-
-            # calculate and store confusion matrix
-            rows = labels.cpu().numpy()
-            cols = output.max(1)[1].cpu().numpy()
-            for label_index in range(labels.shape[0]):
-                confusion[rows[label_index], cols[label_index]] += 1
-
-            # measure elapsed time
-            batch_time.update(time.time() - end)
-            end = time.time()
-
-            if idx % opt.print_freq == 0:
-                print('Test: [{0}/{1}]\t'
-                      'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                      'Acc@1 {top1.val:.3f} ({top1.avg:.3f})\t'.format(
-                       idx, len(val_loader), batch_time=batch_time,
-                       loss=losses, top1=top1))
-
-    return losses.avg, top1.avg, confusion
 
 
 def validate_multi(val_loader, model, criterion, opt):
@@ -366,7 +331,14 @@ def validate_multi(val_loader, model, criterion, opt):
             bsz = labels.shape[0]
 
             # forward
-            output = model(input_data1, input_data2, input_data3)
+            if opt.local_modality == "all":
+                output = model(input_data1, input_data2, input_data3)
+            elif opt.local_modality == "AD":
+                output = model(input_data1, input_data2)
+            elif opt.local_modality == "DR":
+                output = model(input_data2, input_data3)
+            elif opt.local_modality == "AR":
+                output = model(input_data1, input_data3)
             loss = criterion(output, labels)
 
             # update metric
@@ -393,6 +365,7 @@ def validate_multi(val_loader, model, criterion, opt):
                        loss=losses, top1=top1))
 
     return losses.avg, top1.avg, confusion
+
 
 
 def get_model_array(model):
@@ -454,7 +427,8 @@ def reset_model_parameter(new_params, model):
                 para_len = param.shape[0]
                 temp_weight = new_params[temp_index : temp_index + para_len].astype(float)
                 param.copy_(torch.from_numpy(temp_weight))
-                temp_index += para_len                   
+                temp_index += para_len
+
 
 
 def set_commu(opt):
@@ -462,26 +436,15 @@ def set_commu(opt):
     #prepare the communication module
     server_addr = opt.server_address
 
-    if opt.local_modality == "audio":
+    if opt.local_modality == "AD":
+        # current_user = opt.usr_id - 2
         server_port = 9999
-    elif opt.local_modality == "depth":
+    elif opt.local_modality == "DR":
+        # current_user = opt.usr_id - 4
         server_port = 9998
-    elif opt.local_modality == "radar":
-        server_port = 9997
 
-    # if opt.local_modality == "audio":
-    #     node_id_uniFL = [0, 1, 100, 100, 100, 100, 2, 3,4,5,6,7,8,9,10, 11]
-    # elif opt.local_modality == "depth":
-    #     node_id_uniFL = [100, 100, 0, 1, 100, 100, 2, 3,4,5,6,7,8,9,10, 11]
-    # elif opt.local_modality == "radar":
-    #     node_id_uniFL = [100, 100, 100, 100, 0, 1,2,3,4,5,6,7,8,9, 10, 11]
-
-    # current_id = int(node_id_uniFL[opt.usr_id])
-
-    current_id = opt.usr_id
-
-    comm = COMM(server_addr,server_port, current_id)
-
+    
+    comm = COMM(server_addr, server_port, opt.usr_id)
     comm.send2server('hello',-1)
 
     print(comm.recvfserver())
@@ -490,48 +453,114 @@ def set_commu(opt):
 
     return comm
 
+def calculate_dis(model, init_model, opt):
+
+    enc_1_dis = 0.0
+    enc_2_dis = 0.0
+    cls_dis = 0.0
+    len_idx = 0
+
+    # iterate through the current and global model parameters
+    for w, w_t in zip(init_model.parameters(), model.parameters()) :
+
+        if len_idx < opt.dim_enc_0:
+            enc_1_dis += (w-w_t).norm(2).cpu().detach().numpy()
+        elif len_idx >= opt.dim_enc_0 and len_idx < opt.dim_enc_multi:
+            enc_2_dis += (w-w_t).norm(2).cpu().detach().numpy()
+        else:
+            cls_dis += (w-w_t).norm(2).cpu().detach().numpy()
+
+        temp_shape = w.view(-1).shape[0]
+        len_idx += temp_shape
+
+        # print("add distance:",temp_shape, len_idx)
+
+    return enc_1_dis, enc_2_dis, cls_dis
+
+
+def calculate_cos_dis(model, init_model, opt):
+
+    enc_1_dis = 0.0
+    enc_2_dis = 0.0
+    enc_3_dis = 0.0
+    cls_dis = 0.0
+
+    model_weight = get_model_array(model)
+    init_model_weight = get_model_array(init_model)
+
+    enc_1_dis = distance.cosine(model_weight[0:opt.dim_enc_0].reshape(1, -1), init_model_weight[0:opt.dim_enc_0].reshape(1, -1))
+
+    start_index = opt.dim_enc_0
+    end_index = opt.dim_enc_0 + opt.dim_enc_1
+    enc_2_dis = distance.cosine(model_weight[start_index:end_index].reshape(1, -1), init_model_weight[start_index:end_index].reshape(1, -1))
+
+    start_index = opt.dim_enc_0 + opt.dim_enc_1
+    end_index = opt.dim_enc_multi
+    enc_3_dis = distance.cosine(model_weight[start_index:end_index].reshape(1, -1), init_model_weight[start_index:end_index].reshape(1, -1))
+
+    cls_dis = distance.cosine(model_weight[opt.dim_enc_multi:].reshape(1, -1), init_model_weight[opt.dim_enc_multi:].reshape(1, -1))
+
+    return enc_1_dis, enc_2_dis, enc_3_dis, cls_dis
+
+
 
 def main():
-    best_acc = 0
+
     opt = parse_option()
+
+    torch.manual_seed(42)
 
     # set up communication with sevrer
     comm = set_commu(opt)
-    
+
     # build data loader
     train_loader, val_loader = set_loader(opt)
 
     # build model and criterion
     model, criterion = set_model(opt)
-    w_parameter_init = get_model_array(model)
 
+    # global_model = copy.deepcopy(model)
+    init_model = copy.deepcopy(model)
+    w_parameter_init = get_model_array(model.classifier)
 
     # build optimizer
     optimizer = set_optimizer(opt, model)
+
+    # build optimizer for feature extractor and classifier
+    optimizer = optim.SGD([ 
+                {'params': model.encoder.parameters(), 'lr': 1e-4},   # 0
+                {'params': model.classifier.parameters(), 'lr': opt.learning_rate}],
+                momentum=opt.momentum,
+                weight_decay=opt.weight_decay)
+
 
     best_acc = 0
     best_confusion = np.zeros((opt.num_class, opt.num_class))
     record_loss = np.zeros(opt.epochs)
     record_acc = np.zeros(opt.epochs)
 
+    record_enc_1 = np.zeros(opt.epochs)
+    record_enc_2 = np.zeros(opt.epochs)
+    record_cls = np.zeros(opt.epochs)
+
     compute_time_record = np.zeros(opt.epochs)
-    upper_commu_time_record = np.zeros(int(opt.epochs/opt.fl_epoch))
-    down_commu_time_record = np.zeros(int(opt.epochs/opt.fl_epoch))
+    commu_time_record = np.zeros(int(opt.epochs/opt.fl_epoch))
     all_time_record = np.zeros(opt.epochs + 2)
 
+    temp_encoder_dis = np.zeros(3)
+
+    # all_start_time = time.time()
     all_time_record[0] = time.time()
 
+    # training routine
     for epoch in range(1, opt.epochs + 1):
+
         adjust_learning_rate(opt, optimizer, epoch)
 
         # train for one epoch
         time1 = time.time()
-        if opt.local_modality == "all":
-            loss = train_multi(train_loader, model, criterion, optimizer, epoch, opt)
-        else:
-            loss = train_single(train_loader, model, criterion, optimizer, epoch, opt)
+        loss = train_multi(train_loader, model, criterion, optimizer, epoch, opt)
         time2 = time.time()
-
         print('epoch {}, total time {:.2f}'.format(epoch, time2 - time1))
         record_loss[epoch-1] = loss
 
@@ -539,11 +568,7 @@ def main():
         all_time_record[epoch] = time.time()
 
         # evaluation
-        if opt.local_modality == "all":
-            loss, val_acc, confusion = validate_multi(val_loader, model, criterion, opt)
-        else:
-            loss, val_acc, confusion = validate_single(val_loader, model, criterion, opt)
-
+        loss, val_acc, confusion = validate_multi(val_loader, model, criterion, opt)
         record_acc[epoch-1] = val_acc
         if val_acc > best_acc:
              best_acc = val_acc
@@ -552,61 +577,46 @@ def main():
         # # communication with the server every fl_epoch 
         if (epoch % opt.fl_epoch) == 0:
 
-            ## send model update to the server
             print("Node {} sends weight to the server:".format(opt.usr_id))
-            w_parameter = get_model_array(model) #obtain the model parameters or gradients 
+            w_parameter = get_model_array(model.classifier) #obtain the model parameters or gradients 
             w_update = w_parameter - w_parameter_init
 
             comm_time1 = time.time()
+            # comm.send2server(temp_encoder_dis, 2)
             comm.send2server(w_update,0)
+
+            new_w_update, sig_stop = comm.recvOUF()
+
             comm_time2 = time.time()
             commu_epoch = int(epoch/opt.fl_epoch - 1)
-            upper_commu_time_record[commu_epoch] = comm_time2 - comm_time1
-            print("time for sending model weights:", comm_time2 - comm_time1)
+            commu_time_record[commu_epoch] = comm_time2 - comm_time1
 
-            ## recieve aggregated model update from the server
-            comm_time3 = time.time()
-            new_w_update, sig_stop = comm.recvOUF()
-            comm_time4 = time.time()
-            down_commu_time_record[commu_epoch] = comm_time4 - comm_time3
-            print("time for downloading model weights:", comm_time4 - comm_time3)
             print("Received weight from the server:", new_w_update.shape)
             print("Received signal from the server:", sig_stop)
-            
-            ## update the model according to the received weights
-            new_w = w_parameter_init + new_w_update
-            reset_model_parameter(new_w, model)
-            w_parameter_init = new_w
 
-    comm.disconnect(1)
+            ## only update fusion and classifier
+            w_parameter += new_w_update
+            reset_model_parameter(w_parameter, model.classifier)
 
-    print("Testing accuracy of node {} is : ".format(opt.usr_id))
-    print('best accuracy: {:.3f}'.format(best_acc))
-    print('last accuracy: {:.3f}'.format(val_acc))
+            ## record current model weight
+            # global_model = copy.deepcopy(model)
+            w_parameter_init = w_parameter
 
+
+    # evaluation
+    loss, val_acc, confusion = validate_multi(val_loader, model, criterion, opt)
+
+    print("Testing accuracy of node {} is : {}".format(opt.usr_id, val_acc))
     np.savetxt(opt.result_path + "record_loss.txt", record_loss)
     np.savetxt(opt.result_path + "record_acc.txt", record_acc)
     np.savetxt(opt.result_path + "record_confusion.txt", confusion)
 
     np.savetxt(opt.result_path + "compute_time_record.txt", compute_time_record)
-    np.savetxt(opt.result_path + "upper_commu_time_record.txt", upper_commu_time_record)
-    np.savetxt(opt.result_path + "down_commu_time_record.txt", down_commu_time_record)
+    np.savetxt(opt.result_path + "commu_time_record.txt", commu_time_record)
     np.savetxt(opt.result_path + "all_time_record.txt", all_time_record)
 
-    if opt.usr_id >= 6:
-        
-        print("Save FL model!")
-        fl_model_path = "./save_uniFL/{}_models/".format(opt.dataset)
+    comm.disconnect(1)
 
-        if not os.path.isdir(fl_model_path):
-            os.makedirs(fl_model_path)
-        if opt.local_modality == 'audio':
-            save_model(model.encoder, optimizer, opt, opt.epochs, os.path.join(fl_model_path, 'last_audio.pth'))
-        elif opt.local_modality == 'depth':
-            save_model(model.encoder, optimizer, opt, opt.epochs, os.path.join(fl_model_path, 'last_depth.pth'))
-        elif opt.local_modality == 'radar':
-            save_model(model.encoder, optimizer, opt, opt.epochs, os.path.join(fl_model_path, 'last_radar.pth'))
-            
 
 if __name__ == '__main__':
     main()
