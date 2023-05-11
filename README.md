@@ -107,7 +107,7 @@ Second Stage: Federated Fusion Learning (among multimodal nodes)
 	    ```
     ---
 
-# Run Your Own Node Configurations
+# Run with Your Own Node Configurations
 If you only have limited GPU resources (e.g., 4GPUs) or edge devices, and want to run a small-scale Harmony. You can easily revise the following files to achieve it. Take running six nodes from the Flash dataset on 4 GPUs as an example.
 * On the client side: 
 	* Revise the shell script `run_unifl_all.sh`: Here, "CUDA_VISIBLE_DEVICES=xx", "--local_modality xx", and "--usr_id xx" assigns the device id of GPU, the local data modality, and the ID of nodes, respectively. Please ensure that the "CUDA_VISIBLE_DEVICES" and "usr_id" start from 0. And you can assign multiple nodes in FL on the same GPU device. For example, in the below commands, node 0 is a single-modal node that trains the gps model on GPU0, and node 4 is a multi-modal node that trains three unimodal models (gps, lidar, and image) on GPU2.
