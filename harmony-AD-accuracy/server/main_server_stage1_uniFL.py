@@ -83,6 +83,20 @@ aggregation_time_record = np.zeros(opt.fl_round)
 server_start_time_record = np.zeros((opt.num_of_users, opt.fl_round))
 
 
+# for uniFL
+def temp_to_user(temp_id, local_modality):
+
+	if local_modality == 0:
+		reorder_array = np.loadtxt("reorder_id_stage1_audio.txt").astype(int)
+	elif local_modality == 1:
+		reorder_array = np.loadtxt("reorder_id_stage1_depth.txt").astype(int)
+	elif local_modality == 2:
+		reorder_array = np.loadtxt("reorder_id_stage1_radar.txt").astype(int)
+
+	user_id = reorder_array[temp_id, 1]
+
+	return user_id
+
 def mmFedavg_encoder(opt, encoder, local_modality):
 
 	count_modality = np.zeros(opt.num_of_modality)
@@ -284,10 +298,16 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 				size = struct.unpack('i', header)
 
 				#receive the id of client
+				# u_id = self.request.recv(4)
+				# temp_id = struct.unpack('i',u_id)
+
+				# user_id = int(temp_id[0])
+				# # print("user_id:", user_id)
+
+				#receive the id of client
 				u_id = self.request.recv(4)
 				temp_id = struct.unpack('i',u_id)
-
-				user_id = int(temp_id[0])
+				user_id = temp_to_user(int(temp_id[0]), opt.modality_group)
 				# print("user_id:", user_id)
 
 				# receive the type of message, defination in communication.py

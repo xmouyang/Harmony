@@ -82,6 +82,14 @@ aggregation_time_record = np.zeros(opt.fl_round)
 server_start_time_record = np.zeros((opt.num_of_users, opt.fl_round))
 
 
+# for multimodal nodes
+def temp_to_user(temp_id, local_modality):
+
+	reorder_array = np.loadtxt("reorder_id_stage2.txt").astype(int)
+	user_id = reorder_array[temp_id, 1]
+
+	return user_id
+
 def encoder_bias_group(opt, encoder_dis):
 
 	print("original encoder distance:", encoder_dis)
@@ -234,8 +242,14 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 				size = struct.unpack('i', header)
 
 				#receive the id of client
+				# u_id = self.request.recv(4)
+				# user_id = int(struct.unpack('i',u_id)[0])
+
+				#receive the id of client
 				u_id = self.request.recv(4)
-				user_id = int(struct.unpack('i',u_id)[0])
+				temp_id = struct.unpack('i',u_id)
+				user_id = temp_to_user(int(temp_id[0]), 3)
+				# print("user_id:", user_id)
 
 				# receive the type of message, defination in communication.py
 				mess_type = self.request.recv(4)
