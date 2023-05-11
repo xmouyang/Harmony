@@ -15,22 +15,9 @@ The code and datasets of this project are made available for non-commercial, aca
 
 # Requirements
 The program has been tested in the following environment:
-
-Computing Clusters
-* Python 3.9.7
-* Pytorch 1.12.0
-* torchvision 0.13.0
-* CUDA Version 10.2
-* sklearn 0.24.2
-* numpy 1.20.3
-
-Nvidia Xavier NX
-* Ubuntu 18.04.6
-* Python 3.6.9
-* Pytorch 1.8.0
-* CUDA Version 10.2
-* sklearn 0.24.2
-* numpy 1.19.5
+* Computing Clusters: Python 3.9.7, Pytorch 1.12.0, torchvision 0.13.0, CUDA Version 10.2, sklearn 0.24.2, numpy 1.20.3
+* Nvidia Xavier NX: Ubuntu 18.04.6, Python 3.6.9, Pytorch 1.8.0, CUDA Version 10.2, sklearn 0.24.2, numpy 1.19.5
+* 
 <br>
 
 # Harmony Overview
