@@ -110,7 +110,7 @@ Second Stage: Federated Fusion Learning (among multimodal nodes)
 # Run Your Own Node Configurations
 If you only have limited GPU resources (e.g., 4GPUs) or edge devices, and want to run a small-scale Harmony. You can easily revise the following files to achieve it. Take running six nodes from the Flash dataset on 4 GPUs as an example.
 * On the client side: 
-	* Revise the shell script "run_unifl_all.sh": Here, "CUDA_VISIBLE_DEVICES=xx", "--local_modality xx", and "--usr_id xx" assigns the device id of GPU, the local data modality, and the ID of nodes, respectively. Please ensure that the "CUDA_VISIBLE_DEVICES" and "usr_id" start from 0. And you can assign multiple nodes in FL on the same GPU device. For example, in the below commands, node 0 is a single-modal node that trains the gps model on GPU0, and node 4 is a multi-modal node that trains three unimodal models (gps, lidar, and image) on GPU2.
+	* Revise the shell script `run_unifl_all.sh`: Here, "CUDA_VISIBLE_DEVICES=xx", "--local_modality xx", and "--usr_id xx" assigns the device id of GPU, the local data modality, and the ID of nodes, respectively. Please ensure that the "CUDA_VISIBLE_DEVICES" and "usr_id" start from 0. And you can assign multiple nodes in FL on the same GPU device. For example, in the below commands, node 0 is a single-modal node that trains the gps model on GPU0, and node 4 is a multi-modal node that trains three unimodal models (gps, lidar, and image) on GPU2.
 	 ```bash
 	CUDA_VISIBLE_DEVICES=0 python3 main_unimodal.py --local_modality gps --usr_id 0 &
 	CUDA_VISIBLE_DEVICES=0 python3 main_unimodal.py --local_modality gps --usr_id 1 &
@@ -123,13 +123,13 @@ If you only have limited GPU resources (e.g., 4GPUs) or edge devices, and want t
 	CUDA_VISIBLE_DEVICES=3 python3 main_unimodal.py --local_modality lidar --usr_id 5 &
 	CUDA_VISIBLE_DEVICES=3 python3 main_unimodal.py --local_modality image --usr_id 5 &
 	```
-	* Revise the shell script "run_fedfusion_all.sh": To run the second stage, you only need to include multi-modal nodes that appear in "run_unifl_all.sh" as follows, where now you can assign their modality as "all" (or "both" for the dataset with only two modalities) since they train multi-modal fusion models in this stage. The device id of the GPU and the node ID can remain the same.
+	* Revise the shell script `run_fedfusion_all.sh`: To run the second stage, you only need to include multi-modal nodes that appear in "run_unifl_all.sh" as follows, where now you can assign their modality as "all" (or "both" for the dataset with only two modalities) since they train multi-modal fusion models in this stage. The device id of the GPU and the node ID can remain the same.
 	 ```bash
 	CUDA_VISIBLE_DEVICES=2 python3 main_fusion.py --local_modality all --usr_id 4 &
 	CUDA_VISIBLE_DEVICES=3 python3 main_fusion.py --local_modality all --usr_id 5 &
 	```
 * On the server side: 
-	* Revise the text file "reorder_id_stage1_xxx.txt": These files re-order the node ID on the server of each FL unimodal subsystem, to start from 0 and end with num_of_users (-1) in the subsystem. Here the left column denotes the original node ID in the whole multi-modal FL system, and the right column denotes the re-ordered node ID in the subsystem. Note that we set the reordered ID as 1000, if the original node has no corresponding data modality. For example, in the above node configuration in the client side, we have four nodes in the unimodal FL subsystem of gps. Then the customized "reorder_id_stage1_gps.txt" is as follows.
+	* Revise the text file `reorder_id_stage1_xxx.txt`: These files re-order the node ID on the server of each FL unimodal subsystem, to start from 0 and end with num_of_users (-1) in the subsystem. Here the left column denotes the original node ID in the whole multi-modal FL system, and the right column denotes the re-ordered node ID in the subsystem. Note that we set the re-ordered ID as 1000, if the original node has no corresponding data modality. For example, in the above node configuration on the client side, we have four nodes in the unimodal FL subsystem of gps. Then the customized `reorder_id_stage1_gps.txt` is as follows.
 	```bash
 	0	0
 	1	1
@@ -138,7 +138,7 @@ If you only have limited GPU resources (e.g., 4GPUs) or edge devices, and want t
 	4	2
 	5	3
 	```
-	* Revise the text file "reorder_id_stage2.txt": This file re-orders the node ID of multi-modal nodes on the server in the second stage, to start from 0 and end with num_of_users (-1) of all multi-modal nodes. Here the left column denotes the original node ID in the whole multi-modal FL system, and the right column denotes the re-ordered node ID of multi-modal nodes. Note that we set the reordered ID as 1000, if the original node is a single-modal node. For example, in the above node configuration in the client side, we have two multi-modal nodes in the second stage. Then the customized "reorder_id_stage2.txt" is as follows.
+	* Revise the text file `reorder_id_stage2.txt`: This file re-orders the node ID of multi-modal nodes on the server in the second stage, to start from 0 and end with num_of_users (-1) of all multi-modal nodes. Here the left column denotes the original node ID in the whole multi-modal FL system, and the right column denotes the re-ordered node ID of multi-modal nodes. Note that we set the re-ordered ID as 1000, if the original node is a single-modal node. For example, in the above node configuration on the client side, we have two multi-modal nodes in the second stage. Then the customized `reorder_id_stage2.txt` is as follows.
 	```bash
 	0	1000
 	1	1000
