@@ -469,14 +469,16 @@ def set_commu(opt):
     elif opt.local_modality == "radar":
         server_port = 9997
 
-    if opt.local_modality == "audio":
-        node_id_uniFL = [0, 1, 100, 100, 100, 100, 2, 3,4,5,6,7,8,9,10, 11]
-    elif opt.local_modality == "depth":
-        node_id_uniFL = [100, 100, 0, 1, 100, 100, 2, 3,4,5,6,7,8,9,10, 11]
-    elif opt.local_modality == "radar":
-        node_id_uniFL = [100, 100, 100, 100, 0, 1,2,3,4,5,6,7,8,9, 10, 11]
+    # if opt.local_modality == "audio":
+    #     node_id_uniFL = [0, 1, 100, 100, 100, 100, 2, 3,4,5,6,7,8,9,10, 11]
+    # elif opt.local_modality == "depth":
+    #     node_id_uniFL = [100, 100, 0, 1, 100, 100, 2, 3,4,5,6,7,8,9,10, 11]
+    # elif opt.local_modality == "radar":
+    #     node_id_uniFL = [100, 100, 100, 100, 0, 1,2,3,4,5,6,7,8,9, 10, 11]
 
-    current_id = int(node_id_uniFL[opt.usr_id])
+    # current_id = int(node_id_uniFL[opt.usr_id])
+
+    current_id = opt.usr_id
 
     comm = COMM(server_addr,server_port, current_id)
 

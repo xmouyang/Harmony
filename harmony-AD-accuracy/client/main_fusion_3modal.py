@@ -431,7 +431,7 @@ def set_commu(opt):
     server_port = 9995
 
     ## set1
-    current_user = opt.usr_id - 6
+    current_user = opt.usr_id# - 6
     comm = COMM(server_addr, server_port, current_user)
 
     comm.send2server('hello',-1)

@@ -437,13 +437,14 @@ def set_commu(opt):
     server_addr = opt.server_address
 
     if opt.local_modality == "AD":
-        current_user = opt.usr_id - 2
+        # current_user = opt.usr_id - 2
         server_port = 9999
     elif opt.local_modality == "DR":
-        current_user = opt.usr_id - 4
+        # current_user = opt.usr_id - 4
         server_port = 9998
 
-    comm = COMM(server_addr, server_port, current_user)
+    
+    comm = COMM(server_addr, server_port, opt.usr_id)
     comm.send2server('hello',-1)
 
     print(comm.recvfserver())
