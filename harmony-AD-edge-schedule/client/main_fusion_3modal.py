@@ -40,7 +40,7 @@ def parse_option():
                         help='user id')
     parser.add_argument('--local_modality', type=str, default='audio',
                         choices=['audio', 'depth', 'radar', 'all', 'AD', 'DR', 'AR'], help='local_modality')
-    parser.add_argument('--server_address', type=str, default='10.54.20.13',
+    parser.add_argument('--server_address', type=str, default='10.54.20.14',
                         help='server_address')
     parser.add_argument('--fl_epoch', type=int, default=10,
                     help='communication to server after the epoch of local training')
@@ -192,13 +192,13 @@ def load_single_model(opt, modality):
     ckpt = torch.load(ckpt_path, map_location='cpu')
     state_dict = ckpt['model']
 
-    if torch.cuda.is_available():
-        # if torch.cuda.device_count() <= 1:
-        new_state_dict = {}
-        for k, v in state_dict.items():
-            k = k.replace("module.", "")
-            new_state_dict[k] = v
-        state_dict = new_state_dict
+    # if torch.cuda.is_available():
+    #     # if torch.cuda.device_count() <= 1:
+    #     new_state_dict = {}
+    #     for k, v in state_dict.items():
+    #         k = k.replace("module.", "")
+    #         new_state_dict[k] = v
+    #     state_dict = new_state_dict
 
     return state_dict
 

@@ -36,16 +36,16 @@ def parse_option():
                         help='user id')
     parser.add_argument('--local_modality', type=str, default='audio',
                         choices=['audio', 'depth', 'radar', 'all'], help='local_modality')
-    parser.add_argument('--server_address', type=str, default='10.54.20.13',
+    parser.add_argument('--server_address', type=str, default='10.54.20.14',
                         help='server_address')
     parser.add_argument('--fl_epoch', type=int, default=10,
                     help='communication to server after the epoch of local training')
 
-    parser.add_argument('--print_freq', type=int, default=5,
+    parser.add_argument('--print_freq', type=int, default=1,
                         help='print frequency')
-    parser.add_argument('--batch_size', type=int, default=16,
+    parser.add_argument('--batch_size', type=int, default=8,
                         help='batch_size')
-    parser.add_argument('--num_workers', type=int, default=16,
+    parser.add_argument('--num_workers', type=int, default=8,
                         help='num of workers to use')
     parser.add_argument('--epochs', type=int, default=200,
                         help='number of training epochs')
@@ -113,6 +113,7 @@ def parse_option():
     return opt
 
 
+
 def set_loader(opt):
 
     # load labeled train and test data
@@ -124,48 +125,31 @@ def set_loader(opt):
     else:
         total_dataset = data.Unimodal_dataset(opt.usr_id, opt.local_modality)
     
-
     sample_index_path = "./sample_index/node_{}/".format(opt.usr_id)
     all_train_sample_index = np.loadtxt(sample_index_path + "train_sample_index.txt")
-    all_test_sample_index = np.loadtxt(sample_index_path + "test_sample_index.txt")
 
 
     if len(all_train_sample_index) < opt.num_of_train:
         opt.num_of_train = len(all_train_sample_index)
-    if len(all_test_sample_index) < opt.num_of_test:
-        opt.num_of_test = len(all_test_sample_index)
-
     train_sample_index = all_train_sample_index[0:opt.num_of_train]
-    test_sample_index = all_test_sample_index[0:opt.num_of_test]
 
-    ##set1, only add incomplete depth data on multimodal nodes
+
     if opt.usr_id >= 6:
         if opt.local_modality == "depth":#opt.local_modality == "audio" or opt.local_modality == "depth":
             all_incomplete_sample_index = np.loadtxt(sample_index_path + "incomplete_sample_index.txt")
             train_sample_index = np.append(train_sample_index, all_incomplete_sample_index)
     print(len(train_sample_index))
-    print(len(test_sample_index))
-
-    train_sample_index = list(map(int, train_sample_index))#np.array(train_sample_index).
-    test_sample_index = list(map(int, test_sample_index))
 
     train_sample = torch.utils.data.SubsetRandomSampler(train_sample_index, generator=torch.Generator().manual_seed(42))
-    test_sample = torch.utils.data.SubsetRandomSampler(test_sample_index, generator=torch.Generator().manual_seed(42))
 
     train_loader = torch.utils.data.DataLoader(
         total_dataset, batch_size=opt.batch_size, sampler=train_sample,
-        num_workers=opt.num_workers, 
-        pin_memory=True, 
-        # shuffle=True, 
-        drop_last = True)
-    val_loader = torch.utils.data.DataLoader(
-        total_dataset, batch_size=opt.batch_size, sampler=test_sample,
-        num_workers=opt.num_workers, 
+        # num_workers=opt.num_workers, 
         pin_memory=True, 
         # shuffle=True, 
         drop_last = True)
     
-    return train_loader, val_loader
+    return train_loader
 
 
 def set_model(opt):
@@ -206,6 +190,7 @@ def train_single(train_loader, model, criterion, optimizer, epoch, opt):
         # warm-up learning rate
         # warmup_learning_rate(opt, epoch, idx, len(train_loader), optimizer)
 
+        # compute loss
         output = model(input_data1)
         loss = criterion(output, labels)
 
@@ -247,6 +232,7 @@ def train_multi(train_loader, model, criterion, optimizer, epoch, opt):
     losses = AverageMeter()
     top1 = AverageMeter()
 
+    # label_list = []
 
     end = time.time()
     for idx, (input_data1, input_data2, input_data3, labels) in enumerate(train_loader):
@@ -460,27 +446,28 @@ def reset_model_parameter(new_params, model):
 def set_commu(opt):
 
     #prepare the communication module
-    server_addr = opt.server_address
+    server_addr = opt.server_address#"172.22.172.2"
 
+    # server_port = 9998
     if opt.local_modality == "audio":
-        server_port = 9999
+        server_port = 9999#30001#
     elif opt.local_modality == "depth":
-        server_port = 9998
+        server_port = 9998#30101#
     elif opt.local_modality == "radar":
-        server_port = 9997
+        server_port = 9997#30201#
 
+    #[0,1,2, 3,4,5, 6,7,8, 9,10,11,12,13,14]
     # if opt.local_modality == "audio":
-    #     node_id_uniFL = [0, 1, 100, 100, 100, 100, 2, 3,4,5,6,7,8,9,10, 11]
+    #     node_id_uniFL = [0,1,1, 0,1,2, 0,1,2, 2,3,4,5,6,7]
     # elif opt.local_modality == "depth":
-    #     node_id_uniFL = [100, 100, 0, 1, 100, 100, 2, 3,4,5,6,7,8,9,10, 11]
+    #     node_id_uniFL = [0,1,1, 0,1,2, 0,1,2, 3,4,5,6,7,8]
     # elif opt.local_modality == "radar":
-    #     node_id_uniFL = [100, 100, 100, 100, 0, 1,2,3,4,5,6,7,8,9, 10, 11]
+    #     node_id_uniFL = [0,1,1, 0,1,2, 0,1,2, 3,4,5,6,7,8]
 
     # current_id = int(node_id_uniFL[opt.usr_id])
 
-    current_id = opt.usr_id
 
-    comm = COMM(server_addr,server_port, current_id)
+    comm = COMM(server_addr,server_port, opt.usr_id)
 
     comm.send2server('hello',-1)
 
@@ -495,16 +482,12 @@ def main():
     best_acc = 0
     opt = parse_option()
 
-    # set up communication with sevrer
-    comm = set_commu(opt)
-    
     # build data loader
-    train_loader, val_loader = set_loader(opt)
+    train_loader = set_loader(opt)
 
     # build model and criterion
     model, criterion = set_model(opt)
     w_parameter_init = get_model_array(model)
-
 
     # build optimizer
     optimizer = set_optimizer(opt, model)
@@ -513,6 +496,9 @@ def main():
     best_confusion = np.zeros((opt.num_class, opt.num_class))
     record_loss = np.zeros(opt.epochs)
     record_acc = np.zeros(opt.epochs)
+
+    # set up communication with sevrer
+    comm = set_commu(opt)
 
     compute_time_record = np.zeros(opt.epochs)
     upper_commu_time_record = np.zeros(int(opt.epochs/opt.fl_epoch))
@@ -538,17 +524,6 @@ def main():
         compute_time_record[epoch-1] = time2 - time1
         all_time_record[epoch] = time.time()
 
-        # evaluation
-        if opt.local_modality == "all":
-            loss, val_acc, confusion = validate_multi(val_loader, model, criterion, opt)
-        else:
-            loss, val_acc, confusion = validate_single(val_loader, model, criterion, opt)
-
-        record_acc[epoch-1] = val_acc
-        if val_acc > best_acc:
-             best_acc = val_acc
-             best_confusion = confusion
-
         # # communication with the server every fl_epoch 
         if (epoch % opt.fl_epoch) == 0:
 
@@ -566,7 +541,7 @@ def main():
 
             ## recieve aggregated model update from the server
             comm_time3 = time.time()
-            new_w_update, sig_stop = comm.recvOUF()
+            new_w_update, sig_stop, system_time, node_ratio = comm.recvOUF()
             comm_time4 = time.time()
             down_commu_time_record[commu_epoch] = comm_time4 - comm_time3
             print("time for downloading model weights:", comm_time4 - comm_time3)
@@ -579,22 +554,13 @@ def main():
             w_parameter_init = new_w
 
     comm.disconnect(1)
-
-    print("Testing accuracy of node {} is : ".format(opt.usr_id))
-    print('best accuracy: {:.3f}'.format(best_acc))
-    print('last accuracy: {:.3f}'.format(val_acc))
-
     np.savetxt(opt.result_path + "record_loss.txt", record_loss)
-    np.savetxt(opt.result_path + "record_acc.txt", record_acc)
-    np.savetxt(opt.result_path + "record_confusion.txt", confusion)
-
     np.savetxt(opt.result_path + "compute_time_record.txt", compute_time_record)
     np.savetxt(opt.result_path + "upper_commu_time_record.txt", upper_commu_time_record)
     np.savetxt(opt.result_path + "down_commu_time_record.txt", down_commu_time_record)
     np.savetxt(opt.result_path + "all_time_record.txt", all_time_record)
 
     if opt.usr_id >= 6:
-        
         print("Save FL model!")
         fl_model_path = "./save_uniFL/{}_models/".format(opt.dataset)
 
@@ -606,7 +572,7 @@ def main():
             save_model(model.encoder, optimizer, opt, opt.epochs, os.path.join(fl_model_path, 'last_depth.pth'))
         elif opt.local_modality == 'radar':
             save_model(model.encoder, optimizer, opt, opt.epochs, os.path.join(fl_model_path, 'last_radar.pth'))
-            
+
 
 if __name__ == '__main__':
     main()
