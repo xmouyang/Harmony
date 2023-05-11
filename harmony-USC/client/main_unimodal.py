@@ -441,8 +441,8 @@ def set_commu(opt):
 
     if opt.local_modality == "gyr":
         server_port = 9997
-        if opt.usr_id > 4:
-            user_id = opt.usr_id - 5
+        # if opt.usr_id > 4:
+        #     user_id = opt.usr_id - 5
     else:
         server_port = 9998
 
