@@ -79,6 +79,14 @@ mean_classifier_1 = np.zeros(opt.dim_cls_single)
 mean_classifier_multi = np.zeros(opt.dim_cls_multi)
 
 
+# for multimodal nodes
+def temp_to_user(temp_id, local_modality):
+
+	reorder_array = np.loadtxt("reorder_id_stage2.txt").astype(int)
+	user_id = reorder_array[temp_id, 1]
+
+	return user_id
+
 
 def group_index(user_id):
 
@@ -264,8 +272,14 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 				user_id = struct.unpack('i',u_id)
 
 				# receive the type of message, defination in communication.py
-				mess_type = self.request.recv(4)
-				mess_type = struct.unpack('i',mess_type)[0]
+				# mess_type = self.request.recv(4)
+				# mess_type = struct.unpack('i',mess_type)[0]
+
+				#receive the id of client
+				u_id = self.request.recv(4)
+				temp_id = struct.unpack('i',u_id)
+				user_id = temp_to_user(int(temp_id[0]), 3)
+				# print("user_id:", user_id)
 
 				#print("This is the {}th node with message type {}".format(user_id[0],mess_type))
 

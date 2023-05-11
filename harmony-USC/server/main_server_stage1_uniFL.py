@@ -78,6 +78,18 @@ mean_classifier_1 = np.zeros(opt.dim_cls_single)
 mean_classifier_multi = np.zeros(opt.dim_cls_multi)
 
 
+# for uniFL
+def temp_to_user(temp_id, local_modality):
+
+	if local_modality == "acc":
+		reorder_array = np.loadtxt("reorder_id_stage1_acc.txt").astype(int)
+	elif local_modality == "gyr":
+		reorder_array = np.loadtxt("reorder_id_stage1_gyr.txt").astype(int)
+
+	user_id = reorder_array[temp_id, 1]
+
+	return user_id
+
 
 def mmFedavg_encoder(opt, encoder, local_modality):
 
@@ -244,8 +256,14 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 				size = struct.unpack('i', header)
 
 				#receive the id of client
+				# u_id = self.request.recv(4)
+				# user_id = struct.unpack('i',u_id)
+
+				#receive the id of client
 				u_id = self.request.recv(4)
-				user_id = struct.unpack('i',u_id)
+				temp_id = struct.unpack('i',u_id)
+				user_id = temp_to_user(int(temp_id[0]), opt.modality_group)
+				# print("user_id:", user_id)
 
 				# receive the type of message, defination in communication.py
 				mess_type = self.request.recv(4)
