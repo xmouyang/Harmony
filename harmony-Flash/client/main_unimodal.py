@@ -10,6 +10,7 @@ import numpy as np
 # import tensorboard_logger as tb_logger
 import torch
 import torch.backends.cudnn as cudnn
+import torch.utils.data
 # from torch.utils.tensorboard import SummaryWriter
 
 from util import AverageMeter
