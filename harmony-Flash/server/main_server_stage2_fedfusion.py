@@ -74,24 +74,11 @@ group_record = np.zeros((opt.fl_round, opt.num_of_users))
 nor_enc_dis = np.zeros((opt.fl_round, opt.num_of_users, opt.num_of_modality))
 
 
-# for singleFL
+# for multimodal nodes
 def temp_to_user(temp_id, local_modality):
 
-	# [0, 1, 10, 11, 20, 21, 30, 31] -> [0, 1, 2, 3, 4, 5, 6]
-	if local_modality == 0:
-		user_id = int(temp_id/5) + temp_id%10
-
-	# [2, 3, 12, 13, 23, 23, 33, 33] -> [0, 1, 2, 3, 4, 5, 6]
-	elif local_modality == 1:
-		user_id = int(temp_id/5) + temp_id%10 - 2
-
-	# [4, 5, 14, 15, 24, 25, 34, 35] -> [0, 1, 2, 3, 4, 5, 6]
-	elif local_modality == 2:
-		user_id = int(temp_id/6) + temp_id%10 - 4
-
-	# [6, 7, 8, 9, 16, 17, 18, 19, 26, 27, 28, 29, 36, 37, 38, 39] -> [0, 1, 2, 3,  4, 5, 6, 7,  8, 9, 10]
-	elif local_modality == 3:
-		user_id = int(temp_id/10)*4 + temp_id%10 - 6
+	reorder_array = np.loadtxt("reorder_id_stage2.txt").astype(int)
+	user_id = reorder_array[temp_id, 1]
 
 	return user_id
 

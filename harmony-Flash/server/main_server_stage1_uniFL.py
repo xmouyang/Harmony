@@ -77,25 +77,14 @@ server_start_time_record = np.zeros((opt.num_of_users, opt.fl_round))
 # for uniFL
 def temp_to_user(temp_id, local_modality):
 
-	# [0, 1, 6, 7, 8, 9,  10, 11, 16, 17, 18, 19,  20, 21,  30, 31] -> [0, 1, 2, 3, 4, 5,  6, 7, 8, 9, 10, 11, 12, 13]
 	if local_modality == 0:
-		if temp_id%10 < 6:
-			user_id = int(temp_id/10)*6 + temp_id%10
-		else:
-			user_id = int(temp_id/10)*6 + temp_id%10 - 4
-
-
-	# [2, 3, 6, 7, 8, 9,  12, 13,16, 17, 18, 19,  23, 23,  33, 33] -> [0, 1, 2, 3, 4, 5,  6, 7, 8, 9, 10, 11, ]
+		reorder_array = np.loadtxt("reorder_id_stage1_gps.txt").astype(int)
 	elif local_modality == 1:
-
-		if temp_id%10 < 6:
-			user_id = int(temp_id/10)*6 + temp_id%10 - 2
-		else:
-			user_id = int(temp_id/10)*6 + temp_id%10 - 4
-
-	# [4, 5, 6, 7, 8, 9,  14, 15, 16, 17, 18, 19,  24, 25,  34, 35] -> [0, 1,  2, 3,  4, 5,  6,7]
+		reorder_array = np.loadtxt("reorder_id_stage1_lidar.txt").astype(int)
 	elif local_modality == 2:
-		user_id = int(temp_id/10)*6 + temp_id%10 - 4
+		reorder_array = np.loadtxt("reorder_id_stage1_image.txt").astype(int)
+
+	user_id = reorder_array[temp_id, 1]
 
 	return user_id
 
