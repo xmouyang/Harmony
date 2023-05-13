@@ -2,6 +2,17 @@
 This is the repo for MobiSys 2023 paper: "Harmony: Heterogeneous Multi-Modal Federated Learning through Disentangled Model Training".
 <br>
 
+# Citation
+The code and datasets of this project are made available for non-commercial, academic research only. If you would like to use the code or datasets of this project, please cite the following papers:
+```
+@inproceedings{ouyang2023harmony,
+  title={Harmony: Heterogeneous Multi-Modal Federated Learning through Disentangled Model Training},
+  author={Ouyang, Xiaomin and Xie, Zhiyuan and Fu, Heming and Chen, Sitong and Pan, Li and Ling, Neiwen and Xing, Guoliang and Zhou, Jiayu and Huang, Jianwei},
+  booktitle={Proceedings of the 21th Annual International Conference on Mobile Systems, Applications, and Services},
+  year={2023}
+}
+```
+
 # Requirements
 The program has been tested in the following environment:
 * Computing Clusters: Python 3.9.7, Pytorch 1.12.0, torchvision 0.13.0, CUDA Version 10.2, sklearn 0.24.2, numpy 1.20.3
@@ -147,16 +158,6 @@ If you only have limited GPU resources (e.g., 4GPUs) or edge devices, and want t
 	4	0
 	5	1
 	```	
-# Citation
-The code and datasets of this project are made available for non-commercial, academic research only. If you would like to use the code or datasets of this project, please cite the following papers:
-```
-@inproceedings{ouyang2023harmony,
-  title={Harmony: Heterogeneous Multi-Modal Federated Learning through Disentangled Model Training},
-  author={Ouyang, Xiaomin and Xie, Zhiyuan and Fu, Heming and Chen, Sitong and Pan, Li and Ling, Neiwen and Xing, Guoliang and Zhou, Jiayu and Huang, Jianwei},
-  booktitle={Proceedings of the 21th Annual International Conference on Mobile Systems, Applications, and Services},
-  year={2023}
-}
-```
 
 <!---->
     
