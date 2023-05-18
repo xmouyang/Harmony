@@ -1,5 +1,5 @@
 # Harmony
-This is the repo for MobiSys 2023 paper: "Harmony: Heterogeneous Multi-Modal Federated Learning through Disentangled Model Training".
+This is the repo for MobiSys 2023 paper: "<a href="./figure/Harmony_MobiSys23_camera_ready.pdf"> Harmony: Heterogeneous Multi-Modal Federated Learning through Disentangled Model Training </a>".
 <br>
 
 # Citation
