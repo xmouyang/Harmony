@@ -6,9 +6,10 @@ This is the repo for MobiSys 2023 paper: "<a href="./figure/Harmony_MobiSys23_ca
 The code and datasets of this project are made available for non-commercial, academic research only. If you would like to use the code or datasets of this project, please cite the following papers:
 ```
 @inproceedings{ouyang2023harmony,
-  title={Harmony: Heterogeneous Multi-Modal Federated Learning through Disentangled Model Training},
-  author={Ouyang, Xiaomin and Xie, Zhiyuan and Fu, Heming and Chen, Sitong and Pan, Li and Ling, Neiwen and Xing, Guoliang and Zhou, Jiayu and Huang, Jianwei},
-  booktitle={Proceedings of the 21th Annual International Conference on Mobile Systems, Applications, and Services},
+  title={Harmony: Heterogeneous multi-modal federated learning through disentangled model training},
+  author={Ouyang, Xiaomin and Xie, Zhiyuan and Fu, Heming and Cheng, Sitong and Pan, Li and Ling, Neiwen and Xing, Guoliang and Zhou, Jiayu and Huang, Jianwei},
+  booktitle={Proceedings of the 21st Annual International Conference on Mobile Systems, Applications and Services},
+  pages={530--543},
   year={2023}
 }
 ```
